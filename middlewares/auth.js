@@ -1,13 +1,21 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
+// const User = require("../models/user.model");
+const { pool } = require("../database/dbinfo");
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const auth = async (req, res, next) => {
   try {
     const idToken = req.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(idToken, process.env.SECRET_KEY);
-    req.id = decoded.id;
-    const user = await User.findOne({ _id: decoded.id });
-    console.log(decoded );
+      const decoded = jwt.verify(idToken, process.env.SECRET_KEY);
+
+
+    const userQuery = "SELECT * FROM users WHERE id = $1";
+    const userRes = await pool.query(userQuery, [decoded.id]);
+    const user = userRes.rows[0];
+
+    console.log(decoded);
+
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }

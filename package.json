@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.8",
     "@vercel/analytics": "^0.1.5",
     "body-parser": "^1.20.1",
     "cloudinary": "^1.41.0",
@@ -26,12 +27,14 @@
     "mysql2": "^2.3.3",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.9.4",
+    "pg": "^8.11.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "nodemon": "^3.0.3",
+    "supabase": "^1.150.0",
     "swagger-autogen": "^2.23.4"
   }
 }

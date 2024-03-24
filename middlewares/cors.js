@@ -6,9 +6,6 @@ const corsOptions = {
     "http://localhost:3001",
     "http://localhost:5173", 
     "https://sandbox.vnpayment.vn", 
-    "https://bkhostel.netlify.app",
-    "https://hostel.hcmut.tech",
-    "http://bkhostel-fe.s3-website-ap-southeast-2.amazonaws.com"
   ],
   credentials: true,
   method: ["GET", "PUT", "POST", "PATCH", "DELETE"],

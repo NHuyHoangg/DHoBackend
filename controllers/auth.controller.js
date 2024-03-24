@@ -1,24 +1,32 @@
 "use strict";
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
+// const User = require("../models/user.model");
 const nodemailer = require("nodemailer");
+const { pool } = require("../database/dbinfo");
+const path = require("path");
 
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 const signIn = async (req, res) => {
-  const { username, password } = req.body;
+  const { phone, password } = req.body;
 
   try {
-    const user = await User.findOne({ username, password }).select("id");
+    const userQuery =
+      "SELECT id FROM users WHERE phone = $1 AND password = $2";
+    const userRes = await pool.query(userQuery, [phone, password]);
+    const user = userRes.rows[0];
+
     if (!user) {
       return res
         .status(401)
         .json({ message: "Thông tin đăng nhập không chính xác" });
     }
 
-    await User.updateOne({ _id: user.id }, { last_active: new Date() });
 
-    const userInfo = await User.findById(user.id).select(
-      "_id role full_name tokenVersion"
-    );
+    const userInfoQuery =
+      "SELECT id, role, full_name, tokenversion FROM users WHERE id = $1";
+    const userInfoRes = await pool.query(userInfoQuery, [user.id]);
+    const userInfo = userInfoRes.rows[0];
+
     const token = jwt.sign(
       { id: userInfo.id.toString(), tokenVersion: userInfo.tokenVersion },
       process.env.SECRET_KEY
@@ -40,46 +48,44 @@ const signIn = async (req, res) => {
     res.status(500).json({ message: "Lỗi máy chủ" });
   }
 };
-
 const signUp = async (req, res) => {
-  const { username, phone, email, password, password_confirm } = req.body;
+  const { phone, email, password, password_confirm } = req.body;
 
   if (password !== password_confirm) {
     return res.status(422).json({ error: "Mật khẩu không trùng khớp" });
   }
 
   try {
-    const existingUsername = await User.findOne({ username: username });
-    if (existingUsername) {
-      return res.status(409).json({ message: "Username đã tồn tại" });
-    }
 
-    const existingPhone = await User.findOne({ phone: phone });
-    if (existingPhone) {
+    const existingPhoneQuery = "SELECT * FROM users WHERE phone = $1";
+    const existingPhoneRes = await pool.query(existingPhoneQuery, [phone]);
+    if (existingPhoneRes.rows.length > 0) {
       return res.status(409).json({ message: "Phone đã tồn tại" });
     }
 
-    const existingEmail = await User.findOne({ email: email });
-    if (existingEmail) {
+    const existingEmailQuery = "SELECT * FROM users WHERE email = $1";
+    const existingEmailRes = await pool.query(existingEmailQuery, [email]);
+    if (existingEmailRes.rows.length > 0) {
       return res.status(409).json({ message: "Email đã tồn tại" });
     }
-    const newUser = new User({
-      username,
+
+    const insertUserQuery =
+      "INSERT INTO users(phone, email, password) VALUES($1, $2, $3) RETURNING *";
+    const newUserRes = await pool.query(insertUserQuery, [
       phone,
       email,
       password,
-    });
+    ]);
+    const newUser = newUserRes.rows[0];
 
-    const savedUser = await newUser.save();
-    const newUserId = savedUser._id.toString();
     const token = jwt.sign(
-      { id: newUserId, tokenVersion: newUser.tokenVersion },
+      { id: newUser.id, tokenVersion: newUser.tokenVersion },
       process.env.SECRET_KEY
     );
 
     res.json({
       message: "Signup successful",
-      id: newUserId.toString(),
+      id: newUser.id,
       token,
     });
   } catch (err) {

@@ -10,7 +10,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-const User = require("../models/user.model");
+// const User = require("../models/user.model");
 const moment = require("moment-timezone");
 // const moment = require("moment-timezone");
 

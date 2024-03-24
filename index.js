@@ -6,7 +6,7 @@ require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const { corsMiddleware } = require("./middlewares/cors");
 
-require("./database/dbinfo").connect(); //Connect to database (MongoDB)
+const { pool } = require("./database/dbinfo");
 
 app.use(express.json({ limit: "150mb" }));
 app.use(express.urlencoded({ limit: "150mb", extended: true }));
@@ -50,37 +50,37 @@ const authRoutes = require("./routes/auth.route");
 app.use("/auth", authRoutes);
 
 // // ---------------------------- SERVICES  ---------------------------------- //
-const serviceRoutes = require("./routes/service.route");
-app.use("/services", serviceRoutes);
+// const serviceRoutes = require("./routes/service.route");
+// app.use("/services", serviceRoutes);
 
-// // ---------------------------- FAKE DATA  ---------------------------------- //
-const fakerRoutes = require("./routes/faker.route");
-app.use("/faker", fakerRoutes);
+// // // ---------------------------- FAKE DATA  ---------------------------------- //
+// const fakerRoutes = require("./routes/faker.route");
+// app.use("/faker", fakerRoutes);
 
-// // ---------------------------- LOCATION  ---------------------------------- //
-const locationRoutes = require("./routes/location.route");
-app.use("/location", locationRoutes);
+// // // ---------------------------- LOCATION  ---------------------------------- //
+// const locationRoutes = require("./routes/location.route");
+// app.use("/location", locationRoutes);
 
-// // ---------------------------- RECHARGES  ---------------------------------- //
-const rechargeRoute = require("./routes/recharge.route")
-app.use("/recharge",rechargeRoute)
+// // // ---------------------------- RECHARGES  ---------------------------------- //
+// const rechargeRoute = require("./routes/recharge.route")
+// app.use("/recharge",rechargeRoute)
 
-// // ---------------------------- PAYMENTS  ---------------------------------- //
-const paymentRoute = require("./routes/payment.route")
-app.use("/payments",paymentRoute)
+// // // ---------------------------- PAYMENTS  ---------------------------------- //
+// const paymentRoute = require("./routes/payment.route")
+// app.use("/payments",paymentRoute)
 
-// // ---------------------------- POSTS  ---------------------------------- //
-const postsRoute = require("./routes/post.route");
-app.use(postsRoute);
+// // // ---------------------------- POSTS  ---------------------------------- //
+// const postsRoute = require("./routes/post.route");
+// app.use(postsRoute);
 
-// // ---------------------------- USERS  ---------------------------------- //
-const usersRoute = require("./routes/user.route");
-app.use("/users", usersRoute);
+// // // ---------------------------- USERS  ---------------------------------- //
+// const usersRoute = require("./routes/user.route");
+// app.use("/users", usersRoute);
 
 
-// // ---------------------------- USERS  ---------------------------------- //
-const adminRoute = require("./routes/admin.route");
-app.use("/admin", adminRoute);
+// // // ---------------------------- USERS  ---------------------------------- //
+// const adminRoute = require("./routes/admin.route");
+// app.use("/admin", adminRoute);
 
 
 const port = process.env.PORT || 3001;
