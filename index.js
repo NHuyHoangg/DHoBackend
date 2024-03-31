@@ -70,8 +70,8 @@ app.use("/auth", authRoutes);
 // app.use("/payments",paymentRoute)
 
 // // // ---------------------------- POSTS  ---------------------------------- //
-// const postsRoute = require("./routes/post.route");
-// app.use(postsRoute);
+const postsRoute = require("./routes/post.route");
+app.use(postsRoute);
 
 // // // ---------------------------- USERS  ---------------------------------- //
 // const usersRoute = require("./routes/user.route");

@@ -14,7 +14,7 @@ router.post(
                 required: true,
                 schema: {
                     phone: "0123456789",
-                    password: "1235"
+                    password: "123456"
                 }
             }
 */
