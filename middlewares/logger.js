@@ -15,7 +15,7 @@ async function logMiddleware(req, res, next) {
     const endTime = new Date();
     const responseTime = endTime - startTime;
       const client = await pool.connect();
-      console.log(res)
+
     client.query(
       "INSERT INTO logs (level, message, user_id, api_route, server_domain,ip,time_now,msg) VALUES ($1, $2, $3, $4,$5 ,$6,$7,$8)",
       [body, responseTime, user_id, api_route, server_domain, ip, vietnamTime,res.message],
