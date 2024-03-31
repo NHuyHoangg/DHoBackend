@@ -7,11 +7,11 @@ require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 const { corsMiddleware } = require("./middlewares/cors");
 
 const { pool } = require("./database/dbinfo");
-
+const { logMiddleware } = require("./middlewares/logger");
 app.use(express.json({ limit: "150mb" }));
 app.use(express.urlencoded({ limit: "150mb", extended: true }));
 app.use(corsMiddleware);
-
+app.use(logMiddleware);
 // const setCacheControl = (req, res, next) => {
 //   const authToken = req.headers.authorization;
 
