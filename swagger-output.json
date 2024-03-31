@@ -148,6 +148,9 @@
     },
     "/search": {
       "get": {
+        "tags": [
+          "Posts"
+        ],
         "description": "",
         "parameters": [
           {
@@ -168,6 +171,9 @@
     },
     "/posts": {
       "get": {
+        "tags": [
+          "Posts"
+        ],
         "description": "",
         "parameters": [
           {
@@ -221,6 +227,9 @@
         }
       },
       "post": {
+        "tags": [
+          "Posts"
+        ],
         "description": "",
         "parameters": [
           {

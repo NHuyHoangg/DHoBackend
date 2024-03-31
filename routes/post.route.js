@@ -3,7 +3,11 @@ const router = express.Router();
 const postCtrl = require("../controllers/post.controller");
 const auth = require("../middlewares/auth");
 
-router.get("/search", postCtrl.searchPosts);
+router.get(
+  "/search",
+  //  #swagger.tags = ['Posts']
+  postCtrl.searchPosts
+);
 // router.post(
 //   "/posts/history",
 //   /*
@@ -21,6 +25,7 @@ router.get("/search", postCtrl.searchPosts);
 router.get(
   "/posts",
   /*
+   #swagger.tags = ['Posts']
   #swagger.parameters['Authorization'] = {
     in: 'header',
     description: 'Authorization:\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJpYXQiOjE3MTE4NDcyNTJ9.eGEirES2G_n0EgGDLT_7qoFrKITlfyTsiDavS5P48CY"' ,
@@ -35,7 +40,11 @@ router.get(
   }
 );
 
-router.post("/posts", postCtrl.postDetail);
+router.post(
+  "/posts",
+  //  #swagger.tags = ['Posts']
+  postCtrl.postDetail
+);
 // router.post("/posts/toggle", auth, togglePostSoldStatus);
 // router.post("/posts/edit", auth, editPost);
 // router.delete("/posts/:id", auth, deletePost);
