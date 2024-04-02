@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "BKHostel's API",
+    "title": "DHo's API",
     "description": "API for an ecommerce app",
     "version": "1.0.0"
   },

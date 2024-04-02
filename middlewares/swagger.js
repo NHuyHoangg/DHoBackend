@@ -2,7 +2,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerAutogen = require("swagger-autogen")();
 const doc = {
   info: {
-    title: "BKHostel's API",
+    title: "DHo's API",
     description: "API for an ecommerce app",
   },
   host: "",
