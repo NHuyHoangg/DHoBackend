@@ -10,6 +10,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+const { pool } = require("../database/dbinfo");
 // const User = require("../models/user.model");
 const moment = require("moment-timezone");
 // const moment = require("moment-timezone");
@@ -18,15 +19,17 @@ const getUserInfo = async (req, res) => {
   try {
     const { username } = req.params;
 
-    const user = await User.findOne({ username: username }).select(
-      "full_name email username phone zalo facebook avatar -_id"
+    const { rows } = await pool.query(
+      "SELECT full_name, email, username, phone, zalo, facebook, avatar FROM users WHERE username = $1",
+      [username]
     );
 
-    if (!user) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: "Không tìm thấy người dùng" });
     }
-    const result = user.toObject();
-    res.json(result);
+
+    const user = rows[0];
+    res.json(user);
   } catch (err) {
     console.error("Error fetching data:", err);
     return res.status(500).json({ error: "Lỗi máy chủ" });
@@ -36,10 +39,11 @@ const getUserInfo = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const result = req.user;
+
     result.avatar = result.avatar
       ? result.avatar
       : "https://res.cloudinary.com/dgdjzaq35/image/upload/v1691662078/user-circle-v2_foaygy.png";
-    delete result.password;
+   
     res.json(result);
   } catch (err) {
     console.error("Error fetching data:", err);

@@ -86,4 +86,12 @@ router.get(
     res.json({ message: "You are authenticated" });
   }
 );
+
+router.post(
+  "/forgot-password",
+  //  #swagger.tags = ['Auth']
+  authCtrl.forgotPassword
+);
+
+
 module.exports = router;

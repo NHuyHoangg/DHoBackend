@@ -14,14 +14,13 @@ const auth = async (req, res, next) => {
     const userRes = await pool.query(userQuery, [decoded.id]);
     const user = userRes.rows[0];
 
-    console.log(decoded);
-
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
     if (user.tokenVersion !== decoded.tokenVersion) {
       return res.status(401).json({ message: "Token is outdated" });
     }
+    delete user.password;
     req.user = user;
     next();
   } catch (e) {

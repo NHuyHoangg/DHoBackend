@@ -97,7 +97,10 @@ const signUp = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email: email });
+    const userRes = await pool.query("SELECT * FROM users WHERE email = $1", [
+        email,
+    ]);
+    const user = userRes.rows[0];
     if (!user) {
       const error = new Error("Không tìm thấy tài khoản trong hệ thống");
       error.statusCode = 401;
@@ -105,11 +108,12 @@ const forgotPassword = async (req, res) => {
     }
 
     const newPassword = Math.random().toString(36).slice(2, 8);
-    user.password = newPassword;
-    user.tokenVersion++;
+    const tokenVersionIncrement = "token_version = token_version + 1";
 
-    await user.save();
-
+    await pool.query(
+      `UPDATE users SET password = $1, ${tokenVersionIncrement} WHERE id = $2`,
+      [newPassword, user.id]
+    );
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
