@@ -11,6 +11,14 @@ router.get(
   auth,
   userCtrl.getUserProfile
 );
+router.get(
+  "/address",
+  //   #swagger.tags = ['User']
+  // #swagger.description = 'dùng lấy profile của user'
+
+  auth,
+  userCtrl.getUserAddress
+);
 router.post(
   "",
   auth,

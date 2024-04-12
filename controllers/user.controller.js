@@ -37,6 +37,39 @@ const getUserInfo = async (req, res) => {
   }
 };
 
+const getUserAddress = async (req, res) => {
+  try {
+    const address = await pool.query(
+      `SELECT
+        a.id,
+        a.user_id,
+        a.is_default,
+        a.name,
+        a.phone_number,
+        a.street,
+        a.province_id,
+        a.district_id,
+        a.ward_id,
+        w.province_name,
+        w.district_name,
+        w.name
+      FROM
+        address a
+        LEFT JOIN res_ward w ON a.province_id = w.province_id
+        AND a.district_id = w.district_id
+        AND a.ward_id = w.id
+      WHERE
+        a.user_id = $1`,
+      [userId]
+    );
+
+    res.json(address);
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    return res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};
+
 const getUserProfile = async (req, res) => {
   try {
     const user = req.user;
@@ -169,7 +202,7 @@ const editUser = async (req, res) => {
           .join(", ")} WHERE id = ${user.id}`;
         await pool.query(updateQuery, Object.values(changes));
       }
-     const { phone, email, first_name, last_name, avatar } = user;
+      const { phone, email, first_name, last_name, avatar } = user;
 
       const responseJSON = {
         user: { phone, email, first_name, last_name, avatar },
@@ -221,4 +254,5 @@ module.exports = {
   changePassword,
   editUser,
   sellerState,
+  getUserAddress,
 };
