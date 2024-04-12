@@ -9,9 +9,11 @@ router.get(
   // #swagger.tags = ['location']
   locationCtrl.getProvinces
 );
-router.get("/province/:id",
-    // #swagger.tags = ['location']
-    locationCtrl.getDistricts);
+router.get(
+  "/district/:province_id",
+  // #swagger.tags = ['location']
+  locationCtrl.getDistricts
+);
 router.post("/districts"
     // #swagger.tags = ['location']
     , locationCtrl.getWards);

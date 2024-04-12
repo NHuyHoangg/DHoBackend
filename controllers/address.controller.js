@@ -1,4 +1,4 @@
-const { pool, poolPromise } = require("../database/dbinfo");
+
 const NodeCache = require("node-cache");
 const cache = new NodeCache();
 const { pool } = require("../database/dbinfo");
@@ -24,7 +24,7 @@ const getDistricts = async (req, res) => {
 
   try {
     const result = await pool.query(
-      "SELECT district_id, name FROM res_district WHERE province_id = $1",
+      "SELECT id, name FROM res_district WHERE province_id = $1",
       [province_id]
     );
 
@@ -39,7 +39,7 @@ const getProvinces = async (req, res) => {
   try {
     const result = await pool.query("SELECT id,name  from res_province");
 
-    res.status(200).json(result);
+    res.status(200).json(result.rows);
   } catch (err) {
     console.error("Error getting districts:", err);
     return res.status(500).json({ error: "Lỗi máy chủ" });

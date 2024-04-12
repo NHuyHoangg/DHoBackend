@@ -58,8 +58,8 @@ app.use("/auth", authRoutes);
 // app.use("/faker", fakerRoutes);
 
 // // // ---------------------------- LOCATION  ---------------------------------- //
-// const locationRoutes = require("./routes/location.route");
-// app.use("/location", locationRoutes);
+const locationRoutes = require("./routes/location.route");
+app.use("/location", locationRoutes);
 
 // // // ---------------------------- RECHARGES  ---------------------------------- //
 // const rechargeRoute = require("./routes/recharge.route")

@@ -173,6 +173,79 @@
         }
       }
     },
+    "/location/province": {
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/location/district/{province_id}": {
+      "get": {
+        "tags": [
+          "location"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "province_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/location/districts": {
+      "post": {
+        "tags": [
+          "location"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "province_id": {
+                  "example": "any"
+                },
+                "district_id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/search": {
       "get": {
         "tags": [
