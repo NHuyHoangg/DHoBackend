@@ -181,6 +181,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
             "name": "q",
             "in": "query",
             "type": "string"
@@ -242,6 +247,11 @@
             "name": "page",
             "in": "query",
             "type": "string"
+          },
+          {
+            "name": "entriesPerPage",
+            "in": "query",
+            "type": "string"
           }
         ],
         "responses": {
@@ -286,6 +296,147 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "description": "dùng lấy profile của user",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "dùng sửa profile của user",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "avatar": {
+                  "example": "any"
+                },
+                "rest": {
+                  "example": "any"
+                }
+              }
+            },
+            "description": " avatar must be in base64, \n Allowed params:\nlast_name,\nfirst_name,\nphone,\nemail,\navatar,\n",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users/status": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "description": "dùng lấy status seller của user",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/users/change-password": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "dùng lấy đổi password",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "oldPassword": {
+                  "example": "any"
+                },
+                "newPassword": {
+                  "example": "any"
+                },
+                "confirmPassword": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }

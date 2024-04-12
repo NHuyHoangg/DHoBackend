@@ -24,15 +24,19 @@ router.get(
 // );
 router.get(
   "/posts",
-  /*
-   #swagger.tags = ['Posts']
-  #swagger.parameters['Authorization'] = {
-    in: 'header',
-    description: 'Authorization:\"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJpYXQiOjE3MTE4NDcyNTJ9.eGEirES2G_n0EgGDLT_7qoFrKITlfyTsiDavS5P48CY"' ,
-  }
-*/ (req, res, next) => {
+  //  #swagger.tags = ['Posts']
+  (req, res, next) => {
     let params = Object.keys(req.query);
-    if (!params.includes("page") && params.length != 0) {
+    let filterParams = [
+      "sortBy",
+      "condition",
+      "brand",
+      "engine",
+      "size",
+      "priceRange",
+    ];
+
+    if (params.some((param) => filterParams.includes(param))) {
       postCtrl.filterPosts(req, res, next);
     } else {
       postCtrl.getPosts(req, res, next);
@@ -76,6 +80,5 @@ router.post(
 //   }
 // */
 // );
-
 
 module.exports = router;

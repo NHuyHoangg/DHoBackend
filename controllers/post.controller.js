@@ -59,25 +59,32 @@ const getPosts = async (req, res) => {
   try {
     // Query to fetch the posts with media content (index 1) and specific details
     let sqlQuery = `
-    SELECT
-      p.ID AS post_id,
-      p.name,
-      p.price,
-      p.watch_id,
-      p.case_size,
-      p.status,
-      p.create_date AS date,
-      rpr.name AS province,
-      pm.content AS media_content
-    FROM
-      post p
-    LEFT JOIN
-      post_media pm ON p.id =  CAST(pm.post_id AS INTEGER) AND pm.post_index = 1
-    LEFT JOIN
-      users rp ON p.user_id = rp.id
-    LEFT JOIN
-      res_province rpr ON cast(rp.province_id as integer)  = rpr.id where p.is_active = 1 AND p.is_sold = 0
-    ORDER BY post_id desc
+      WITH filtered_posts AS (
+        SELECT
+          p.ID AS post_id,
+          p.name,
+          p.price,
+          p.watch_id,
+          p.case_size,
+          p.status,
+          p.create_date AS date,
+          rpr.name AS province,
+          pm.content AS media_content
+        FROM
+          post p
+        LEFT JOIN
+          post_media pm ON p.id =  CAST(pm.post_id AS INTEGER) AND pm.post_index = 1
+        LEFT JOIN
+          users rp ON p.user_id = rp.id
+        LEFT JOIN
+          res_province rpr ON cast(rp.province_id as integer)  = rpr.id 
+        WHERE p.is_active = $1 AND p.is_sold = $2
+      ),
+      total_count AS (
+        SELECT COUNT(*) FROM filtered_posts
+      )
+      SELECT * FROM filtered_posts, total_count
+      ORDER BY post_id DESC
     `;
     //paging
     let page = req.query.page || 1;
@@ -93,10 +100,14 @@ const getPosts = async (req, res) => {
       sqlQuery += "LIMIT 10 OFFSET " + (page - 1) * 10 + ";";
     }
 
-      const client = await pool.connect();
-      const ressql = await client.query(sqlQuery);
-      const rows = ressql.rows;
-      const updatedRows = getUpdatedRows(rows);
+    const client = await pool.connect();
+    // Execute count query
+
+    const ressql = await client.query(sqlQuery, [1, 0]);
+    const rows = ressql.rows;
+    const updatedRows = getUpdatedRows(rows);
+    const totalPosts = rows[0] ? rows[0].count : 0;
+    const totalPages = Math.ceil(totalPosts / 10);
     let authHeader = "";
     authHeader += req.header("Authorization");
     if (authHeader.length > 0) {
@@ -115,12 +126,289 @@ const getPosts = async (req, res) => {
           } else row.is_favorite = false;
         });
       } catch (err) {
-        return res.json(updatedRows);
+        return res.json({
+          totalEntries: totalPosts,
+          totalPages: totalPages,
+          currentPage: page,
+          entries: updatedRows,
+        });
       }
     }
     client.release();
 
-    return res.json(updatedRows);
+    return res.json({
+      totalEntries: totalPosts,
+      totalPages: totalPages,
+      currentPage: page,
+      entries: updatedRows,
+    });
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// const searchPosts = async (req, res) => {
+//   try {
+//     // Query to fetch the posts with media content (index 1) and specific details
+//     const { q } = req.query;
+//     const sqlQuery = `
+//       SELECT
+//         p.ID AS post_id,
+//         p.name,
+//         p.case_size,
+//         p.status,
+//         p.price,
+//         p.create_date AS date,
+//         rpr.name AS province,
+//         pm.content AS media_content
+//       FROM
+//         post p
+//       LEFT JOIN
+//         post_media pm ON p.ID = pm.post_id::integer AND pm.post_index = 1
+//       LEFT JOIN
+//          users  rp ON p.user_id = rp.id
+//       LEFT JOIN
+//         res_province rpr ON cast(rp.province_id as integer)  = rpr.id
+//          WHERE
+//       (p.price LIKE $1 OR
+//       p.name LIKE $1 OR
+//       p.case_size LIKE $1 OR
+//       p.description LIKE $1 OR
+//       p.brand LIKE $1 OR
+//       p.color LIKE $1 OR
+//       p.strap_color LIKE $1 OR
+//       p.strap_material LIKE $1 OR
+//       p.engine LIKE $1) AND
+//       p.is_active = 1 AND p.is_sold = 0
+//       ;
+//     `;
+
+//     const client = await pool.connect();
+//     const ressql = await client.query(sqlQuery, [`%${q}%`]);
+//     const rows = ressql.rows;
+//     client.release();
+//     const updatedRows = getUpdatedRows(rows);
+//     // const updatedRows = getUpdatedRows(result);
+//     return res.json(updatedRows);
+//   } catch (err) {
+//     console.error("Error fetching data:", err);
+//     return res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+
+const searchPosts = async (req, res) => {
+  try {
+    const postsPerPage = 10;
+    let page = req.query.page || 1;
+
+    const { q } = req.query;
+
+    const sqlQuery = `
+      WITH filtered_posts AS (
+        SELECT
+          p.ID AS post_id,
+          p.name,
+          p.case_size,
+          p.status,
+          p.price,
+          p.create_date AS date,
+          rpr.name AS province,
+          pm.content AS media_content
+        FROM
+          post p
+        LEFT JOIN
+          post_media pm ON p.ID = pm.post_id::integer AND pm.post_index = 1
+        LEFT JOIN
+          users  rp ON p.user_id = rp.id
+        LEFT JOIN
+          res_province rpr ON cast(rp.province_id as integer)  = rpr.id 
+        WHERE
+        (p.price LIKE $1 OR
+        p.name LIKE $1 OR
+        p.case_size LIKE $1 OR
+        p.description LIKE $1 OR
+        p.brand LIKE $1 OR
+        p.color LIKE $1 OR
+        p.strap_color LIKE $1 OR
+        p.strap_material LIKE $1 OR
+        p.engine LIKE $1) AND
+        p.is_active = 1 AND p.is_sold = 0
+      ),
+      total_count AS (
+        SELECT COUNT(*) FROM filtered_posts
+      )
+      SELECT * FROM filtered_posts, total_count
+      ORDER BY post_id DESC
+      LIMIT $2 OFFSET $3;
+    `;
+
+    // Validate page number
+    const numberPattern = /^-?\d+(\.\d+)?$/;
+    const isNumber = numberPattern.test(page);
+    if (!isNumber) {
+      const error = new Error("Invalid parameter");
+      error.statusCode = 402;
+      throw error;
+    }
+    page = parseInt(page);
+
+    const client = await pool.connect();
+    const ressql = await client.query(sqlQuery, [
+      `%${q}%`,
+      postsPerPage,
+      (page - 1) * postsPerPage,
+    ]);
+    const rows = ressql.rows;
+    client.release();
+    const updatedRows = getUpdatedRows(rows);
+
+    const totalPosts = rows[0] ? rows[0].count : 0;
+    const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+    return res.json({
+      totalEntries: totalPosts,
+      totalPages: totalPages,
+      currentPage: page,
+      entries: updatedRows,
+    });
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+const filterPosts = async (req, res) => {
+  try {
+    const {
+      sortBy,
+      condition,
+      brand,
+      engine,
+      size,
+      priceRange,
+      page = 1,
+      entriesPerPage = 10,
+    } = req.query;
+
+    let sqlQuery = `
+      SELECT
+        p.ID AS post_id,
+        p.name,
+        CAST(p.price as integer) as price,
+        p.watch_id,
+        p.case_size,
+        p.status,
+        p.create_date AS date,
+        rpr.name AS province,
+        pm.content AS media_content
+      FROM
+        post p
+      LEFT JOIN
+        post_media pm ON p.id =  CAST(pm.post_id AS INTEGER) AND pm.post_index = 1
+      LEFT JOIN
+        users rp ON p.user_id = rp.id
+      LEFT JOIN
+        res_province rpr ON cast(rp.province_id as integer)  = rpr.id
+      WHERE
+        p.is_active = 1 AND p.is_sold = 0`;
+
+    if (condition) {
+      sqlQuery += ` AND p.status = '${condition}'`;
+    }
+
+    if (!Array.isArray(brand) && brand) {
+      sqlQuery += ` AND p.brand like'${brand}'`;
+    }
+    let brandParams = {};
+    let brandString = "";
+    if (Array.isArray(brand) && brand.length > 0) {
+      brandParams = Object.fromEntries(
+        brand.map((b, i) => [`brand${i}`, `%${b}%`])
+      );
+      brandString = Object.values(brandParams)
+        .map((value) => `p.brand LIKE '${value}'`)
+        .join(" OR ");
+      sqlQuery += ` AND (${brandString})`;
+    }
+
+    if (engine) {
+      sqlQuery += ` AND p.engine = '${engine}'`;
+    }
+
+    if (size) {
+      const [minSize, maxSize] = size.split("-");
+
+      const minSizeValue = parseInt(minSize);
+      const maxSizeValue = parseInt(maxSize);
+
+      if (!isNaN(minSizeValue) && !isNaN(maxSizeValue)) {
+        sqlQuery += ` AND CAST(SUBSTR(p.case_size, 1, LENGTH(p.case_size) - 2) AS UNSIGNED) >= ${minSizeValue} AND CAST(SUBSTR(p.case_size, 1, LENGTH(p.case_size) - 2) AS UNSIGNED) <= ${maxSizeValue}`;
+      }
+    }
+
+    if (priceRange) {
+      const [minPrice, maxPrice] = priceRange.split("-");
+      sqlQuery += ` AND price >= ${minPrice} AND price <= ${maxPrice}`;
+    }
+    if (sortBy) {
+      switch (sortBy) {
+        case "newest":
+          sqlQuery += " ORDER BY p.create_date DESC";
+          break;
+        case "oldest":
+          sqlQuery += " ORDER BY p.create_date ASC";
+          break;
+        case "price_asc":
+          sqlQuery += " ORDER BY price ASC";
+          break;
+        case "price_desc":
+          sqlQuery += " ORDER BY price DESC";
+          break;
+        default:
+          break;
+      }
+    }
+    sqlQuery += ` LIMIT ${entriesPerPage} OFFSET ${
+      (page - 1) * entriesPerPage
+    }`;
+    const client = await pool.connect();
+    const ressql = await client.query(sqlQuery);
+
+    const rows = ressql.rows;
+    const totalEntries = rows.length;
+    const totalPages = Math.ceil(totalEntries / entriesPerPage);
+    const updatedRows = getUpdatedRows(rows);
+    const authHeader = req.header("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const idToken = req.header("Authorization").replace("Bearer ", "");
+        const decoded = jwt.verify(idToken, process.env.SECRET_KEY);
+        req.id = decoded?.id;
+        const [results] = await connection.query(
+          "SELECT post_id FROM post_favorites WHERE user_id = ?",
+          [req.id]
+        );
+        const postFavorites = results.map((row) => row.post_id);
+        updatedRows.forEach((row) => {
+          if (postFavorites.includes(row.post_id)) {
+            row.is_favorite = true;
+          } else row.is_favorite = false;
+        });
+      } catch (err) {
+        return res
+          .status(500)
+          .json({ error: "Invalid token", result: updatedRows });
+      }
+    }
+    client.release();
+
+    return res.json({
+      currentPage: page,
+      totalEntries,
+      totalPages,
+      posts: updatedRows,
+    });
   } catch (err) {
     console.error("Error fetching data:", err);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -133,7 +421,7 @@ const postDetail = async (req, res) => {
     const client = await pool.connect();
     const sqlQuery = `
      SELECT
-        wm.id,
+        wm.id::integer,
         wm.name,
         rp.name as user_name,
         wm.watch_id,
@@ -262,7 +550,6 @@ const postDetail = async (req, res) => {
     authHeader += req.header("Authorization");
     if (authHeader.length > 0) {
       try {
-
         const idToken = req.header("Authorization").replace("Bearer ", "");
         const decoded = jwt.verify(idToken, process.env.SECRET_KEY);
         req.id = decoded.id;
@@ -280,175 +567,6 @@ const postDetail = async (req, res) => {
     return res.json(responseJSON);
   } catch (error) {
     console.error("Error fetching data:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-const searchPosts = async (req, res) => {
-  try {
-    // Query to fetch the posts with media content (index 1) and specific details
-    const { q } = req.query;
-    const sqlQuery = `
-      SELECT
-        p.ID AS post_id,
-        p.name,
-        p.case_size,
-        p.status,
-        p.price,
-        p.create_date AS date,
-        rpr.name AS province,
-        pm.content AS media_content
-      FROM
-        post p
-      LEFT JOIN
-        post_media pm ON p.ID = pm.post_id::integer AND pm.post_index = 1
-      LEFT JOIN
-         users  rp ON p.user_id = rp.id
-      LEFT JOIN
-        res_province rpr ON cast(rp.province_id as integer)  = rpr.id 
-         WHERE
-      (p.price LIKE $1 OR
-      p.name LIKE $1 OR
-      p.case_size LIKE $1 OR
-      p.description LIKE $1 OR
-      p.brand LIKE $1 OR
-      p.color LIKE $1 OR
-      p.strap_color LIKE $1 OR
-      p.strap_material LIKE $1 OR
-      p.engine LIKE $1) AND
-      p.is_active = 1 AND p.is_sold = 0
-      ;
-    `;
-
-    const client = await pool.connect();
-    const ressql = await client.query(sqlQuery, [
-      `%${q}%`
-    ]);
-     const rows = ressql.rows;
-    client.release();
-    const updatedRows = getUpdatedRows(rows);
-    // const updatedRows = getUpdatedRows(result);
-    return res.json(updatedRows);
-  } catch (err) {
-    console.error("Error fetching data:", err);
-    return res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-const filterPosts = async (req, res) => {
-  try {
-    const { sortBy, condition, brand, engine, size, priceRange } = req.query;
-    // Build the SQL query based on the filter criteria
-    let sqlQuery = `
-      SELECT
-        p.ID AS post_id,
-        p.name,
-        CAST(p.price as integer) as price,
-        p.watch_id,
-        p.case_size,
-        p.status,
-        p.create_date AS date,
-        rpr.name AS province,
-        pm.content AS media_content
-      FROM
-        post p
-      LEFT JOIN
-        post_media pm ON p.id =  CAST(pm.post_id AS INTEGER) AND pm.post_index = 1
-      LEFT JOIN
-        users rp ON p.user_id = rp.id
-      LEFT JOIN
-        res_province rpr ON cast(rp.province_id as integer)  = rpr.id
-      WHERE
-        p.is_active = 1 AND p.is_sold = 0`;
-
-    if (condition) {
-      sqlQuery += ` AND p.status = '${condition}'`;
-    }
-
-    if (!Array.isArray(brand) && brand) {
-      sqlQuery += ` AND p.brand like'${brand}'`;
-    }
-    let brandParams = {};
-    let brandString = "";
-    if (Array.isArray(brand) && brand.length > 0) {
-      brandParams = Object.fromEntries(
-        brand.map((b, i) => [`brand${i}`, `%${b}%`])
-      );
-      brandString = Object.values(brandParams)
-        .map((value) => `p.brand LIKE '${value}'`)
-        .join(" OR ");
-      sqlQuery += ` AND (${brandString})`;
-    }
-
-    if (engine) {
-      sqlQuery += ` AND p.engine = '${engine}'`;
-    }
-
-    if (size) {
-      const [minSize, maxSize] = size.split("-");
-
-      const minSizeValue = parseInt(minSize);
-      const maxSizeValue = parseInt(maxSize);
-
-      if (!isNaN(minSizeValue) && !isNaN(maxSizeValue)) {
-        sqlQuery += ` AND CAST(SUBSTR(p.case_size, 1, LENGTH(p.case_size) - 2) AS UNSIGNED) >= ${minSizeValue} AND CAST(SUBSTR(p.case_size, 1, LENGTH(p.case_size) - 2) AS UNSIGNED) <= ${maxSizeValue}`;
-      }
-    }
-
-    if (priceRange) {
-      const [minPrice, maxPrice] = priceRange.split("-");
-      sqlQuery += ` AND price >= ${minPrice} AND price <= ${maxPrice}`;
-    }
-    if (sortBy) {
-      switch (sortBy) {
-        case "newest":
-          sqlQuery += " ORDER BY p.create_date DESC";
-          break;
-        case "oldest":
-          sqlQuery += " ORDER BY p.create_date ASC";
-          break;
-        case "price_asc":
-          sqlQuery += " ORDER BY price ASC";
-          break;
-        case "price_desc":
-          sqlQuery += " ORDER BY price DESC";
-          break;
-        default:
-          break;
-      }
-    }
-      const client = await pool.connect();
-      const ressql = await client.query(sqlQuery);
-
-    const rows = ressql.rows;
-
-    const updatedRows = getUpdatedRows(rows);
-    const authHeader = req.header("Authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      try {
-        const idToken = req.header("Authorization").replace("Bearer ", "");
-        const decoded = jwt.verify(idToken, process.env.SECRET_KEY);
-        req.id = decoded?.id;
-        const [results] = await connection.query(
-          "SELECT post_id FROM post_favorites WHERE user_id = ?",
-          [req.id]
-        );
-        const postFavorites = results.map((row) => row.post_id);
-        updatedRows.forEach((row) => {
-          if (postFavorites.includes(row.post_id)) {
-            row.is_favorite = true;
-          } else row.is_favorite = false;
-        });
-      } catch (err) {
-        return res
-          .status(500)
-          .json({ error: "Invalid token", result: updatedRows });
-      }
-    }
-    client.release();
-
-    return res.json(updatedRows);
-  } catch (err) {
-    console.error("Error fetching data:", err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -859,6 +977,6 @@ module.exports = {
   filterPosts,
   // uploadPost,
   // getActivePosts,
-//   editPost,
-//   togglePostSoldStatus,
+  //   editPost,
+  //   togglePostSoldStatus,
 };

@@ -10,8 +10,7 @@ const signIn = async (req, res) => {
   const { phone, password } = req.body;
 
   try {
-    const userQuery =
-      "SELECT id FROM users WHERE phone = $1 AND password = $2";
+    const userQuery = "SELECT id FROM users WHERE phone = $1 AND password = $2";
     const userRes = await pool.query(userQuery, [phone, password]);
     const user = userRes.rows[0];
 
@@ -21,9 +20,8 @@ const signIn = async (req, res) => {
         .json({ message: "Thông tin đăng nhập không chính xác" });
     }
 
-
     const userInfoQuery =
-      "SELECT id, role, full_name, tokenversion FROM users WHERE id = $1";
+      'SELECT id, role,"first name","last name", tokenversion FROM users WHERE id = $1';
     const userInfoRes = await pool.query(userInfoQuery, [user.id]);
     const userInfo = userInfoRes.rows[0];
 
@@ -37,7 +35,8 @@ const signIn = async (req, res) => {
       result: {
         "user-info": {
           id: userInfo.id,
-          full_name: userInfo.full_name,
+          full_name:
+            (userInfo.first_name || "") + " " + (userInfo.last_name || ""),
           role: userInfo.role,
         },
       },
@@ -56,17 +55,17 @@ const signUp = async (req, res) => {
   }
 
   try {
-
-    const existingPhoneQuery = "SELECT * FROM users WHERE phone = $1";
-    const existingPhoneRes = await pool.query(existingPhoneQuery, [phone]);
-    if (existingPhoneRes.rows.length > 0) {
-      return res.status(409).json({ message: "Phone đã tồn tại" });
-    }
-
-    const existingEmailQuery = "SELECT * FROM users WHERE email = $1";
-    const existingEmailRes = await pool.query(existingEmailQuery, [email]);
-    if (existingEmailRes.rows.length > 0) {
-      return res.status(409).json({ message: "Email đã tồn tại" });
+    const existingUserQuery =
+      "SELECT * FROM users WHERE phone = $1 OR email = $2";
+    const existingUserRes = await pool.query(existingUserQuery, [phone, email]);
+    if (existingUserRes.rows.length > 0) {
+      const existingUser = existingUserRes.rows[0];
+      if (existingUser.phone === phone) {
+        return res.status(409).json({ message: "Phone đã tồn tại" });
+      }
+      if (existingUser.email === email) {
+        return res.status(409).json({ message: "Email đã tồn tại" });
+      }
     }
 
     const insertUserQuery =
@@ -98,7 +97,7 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const userRes = await pool.query("SELECT * FROM users WHERE email = $1", [
-        email,
+      email,
     ]);
     const user = userRes.rows[0];
     if (!user) {

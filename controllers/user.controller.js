@@ -10,6 +10,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 const { pool } = require("../database/dbinfo");
 // const User = require("../models/user.model");
 const moment = require("moment-timezone");
@@ -20,7 +21,7 @@ const getUserInfo = async (req, res) => {
     const { username } = req.params;
 
     const { rows } = await pool.query(
-      "SELECT full_name, email, username, phone, zalo, facebook, avatar FROM users WHERE username = $1",
+      "SELECT first name, last name, email,  phone, avatar FROM users WHERE username = $1",
       [username]
     );
 
@@ -38,12 +39,21 @@ const getUserInfo = async (req, res) => {
 
 const getUserProfile = async (req, res) => {
   try {
-    const result = req.user;
+    const user = req.user;
 
-    result.avatar = result.avatar
-      ? result.avatar
+    user.avatar = user.avatar
+      ? user.avatar
       : "https://res.cloudinary.com/dgdjzaq35/image/upload/v1691662078/user-circle-v2_foaygy.png";
-   
+
+    const result = {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+    };
+
     res.json(result);
   } catch (err) {
     console.error("Error fetching data:", err);
@@ -55,6 +65,15 @@ const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     const user = req.user;
+
+    const { rows } = await pool.query(
+      "SELECT password FROM public.users WHERE id = $1",
+      [user.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Không tìm thấy người dùng" });
+    }
+
     if (oldPassword !== user.password) {
       const error = new Error("Mật khẩu cũ không đúng");
       error.statusCode = 403;
@@ -70,12 +89,11 @@ const changePassword = async (req, res) => {
       error.statusCode = 400;
       throw error;
     }
-    await User.findOneAndUpdate(
-      { _id: user.id },
-      { $inc: { tokenVersion: 1 } }
+    await pool.query(
+      "UPDATE public.users SET password = $1, tokenversion = tokenversion + 1 WHERE id = $2",
+      [newPassword, user.id]
     );
-    user.password = newPassword;
-    await user.save();
+
     res.json({ message: "Thay đổi mật khẩu thành công" });
   } catch (error) {
     console.error(error);
@@ -88,17 +106,14 @@ const changePassword = async (req, res) => {
 const editUser = async (req, res) => {
   try {
     const allowedParams = [
-      "username",
-      "full_name",
       "phone",
       "email",
-      "zalo",
-      "facebook",
+      "first_name",
+      "last_name",
       "avatar",
     ];
     const user = req.user;
-    const oldUser = JSON.parse(JSON.stringify(user));
-    const { avatar, ...rest } = req.body;
+    const { avatar: avatarFromBody, ...rest } = req.body;
 
     const requestBodyKeys = Object.keys(req.body);
 
@@ -118,44 +133,46 @@ const editUser = async (req, res) => {
     }
     let oldAvatar = user.avatar;
     try {
-      if (avatar) {
+      if (avatarFromBody) {
         const dateTime = moment()
           .tz("Asia/Ho_Chi_Minh")
           .format("YYYY-MM-DD HH:mm:ss");
-
         const imageName = `${user.id}_${dateTime}`;
         try {
-          const uploadResponse = await cloudinary.uploader.upload(avatar, {
-            public_id: `${imageName}`,
-            folder: "BKHostelID",
-          });
+          const uploadResponse = await cloudinary.uploader.upload(
+            avatarFromBody,
+            {
+              public_id: `${imageName}`,
+              folder: "DHo",
+            }
+          );
+
           user.avatar = uploadResponse.url;
         } catch (error) {
+          console.log(error);
           console.error("Error uploading image:", error.message);
         }
       }
-      const changes = {};
+      let changes = {};
       Object.keys(rest).forEach((key) => {
-        if (rest[key] !== null) {
-          user[key] = rest[key];
-        }
-        if (oldUser[key] !== null && user[key] !== oldUser[key]) {
-          changes[key] = {
-            old: oldUser[key],
-            new: rest[key],
-          };
+        if (rest[key] !== null && rest[key] !== "" && user[key] !== rest[key]) {
+          (changes[key] = rest[key]), (user[key] = rest[key]);
         }
       });
-
       if (oldAvatar !== user.avatar) {
-        changes.avatar = {
-          old: oldAvatar,
-          new: user.avatar,
-        };
+        changes["avatar"] = user.avatar;
       }
-      await user.save();
+
+      if (Object.keys(changes).length > 0) {
+        const updateQuery = `UPDATE public.users SET ${Object.keys(changes)
+          .map((key, index) => `${key} = $${index + 1}`)
+          .join(", ")} WHERE id = ${user.id}`;
+        await pool.query(updateQuery, Object.values(changes));
+      }
+     const { phone, email, first_name, last_name, avatar } = user;
+
       const responseJSON = {
-        user: user,
+        user: { phone, email, first_name, last_name, avatar },
         changes: changes,
         message: "Cập nhật thành công.",
       };
@@ -170,9 +187,38 @@ const editUser = async (req, res) => {
   }
 };
 
+const sellerState = async (req, res) => {
+  const userID = req.id;
+  try {
+    const rows = await pool.query("SELECT is_seller FROM users WHERE id = $1", [
+      userID,
+    ]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+    const isSeller = rows.rows.is_seller;
+    // if (!isSeller) {
+    //   return res
+    //     .status(403)
+    //     .json({ error: "User does not have permission to upload a post." });
+    // }
+    const responseJSON = {
+      userID: userID,
+      isSeller: isSeller ? true : false,
+      message: "Query successfully.",
+    };
+    res.status(200).json(responseJSON);
+  } catch (error) {
+    console.error("Error getting user:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getUserInfo,
   getUserProfile,
   changePassword,
   editUser,
+  sellerState,
 };
