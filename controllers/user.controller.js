@@ -217,15 +217,15 @@ const changePassword = async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     const user = req.user;
 
-    const { rows } = await pool.query(
+    const rows  = await pool.query(
       "SELECT password FROM public.users WHERE id = $1",
       [user.id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ error: "Không tìm thấy người dùng" });
     }
-
-    if (oldPassword !== user.password) {
+    const check = rows.rows[0];
+    if (oldPassword !== check.password) {
       const error = new Error("Mật khẩu cũ không đúng");
       error.statusCode = 403;
       throw error;
