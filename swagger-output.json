@@ -247,11 +247,6 @@
             "name": "page",
             "in": "query",
             "type": "string"
-          },
-          {
-            "name": "entriesPerPage",
-            "in": "query",
-            "type": "string"
           }
         ],
         "responses": {

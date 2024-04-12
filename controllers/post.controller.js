@@ -288,9 +288,8 @@ const filterPosts = async (req, res) => {
       size,
       priceRange,
       page = 1,
-      entriesPerPage = 10,
     } = req.query;
-
+    const entriesPerPage = 10;
     let sqlQuery = `
       SELECT
         p.ID AS post_id,
