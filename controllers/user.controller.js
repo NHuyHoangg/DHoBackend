@@ -39,12 +39,14 @@ const getUserInfo = async (req, res) => {
 
 const getUserAddress = async (req, res) => {
   try {
+    const user = req.user;
     const address = await pool.query(
       `SELECT
         a.id,
         a.user_id,
         a.is_default,
-        a.name,
+        a.first_name,
+        a.last_name,
         a.phone_number,
         a.street,
         a.province_id,
@@ -52,20 +54,136 @@ const getUserAddress = async (req, res) => {
         a.ward_id,
         w.province_name,
         w.district_name,
-        w.name
+        w.name as ward_name
       FROM
         address a
         LEFT JOIN res_ward w ON a.province_id = w.province_id
         AND a.district_id = w.district_id
         AND a.ward_id = w.id
       WHERE
-        a.user_id = $1`,
-      [userId]
+        a.user_id = $1 order by id`,
+      [user.id]
     );
-
-    res.json(address);
+    const result = address.rows.map(
+      ({
+        id,
+        user_id,
+        first_name,
+        last_name,
+        is_default,
+        ward_name,
+        phone_number,
+        street,
+        province_name,
+        district_name,
+      }) => ({
+        id,
+        user_id,
+        name: `${last_name} ${first_name}`,
+        first_name,
+        last_name,
+        is_default,
+        ward_name,
+        phone_number,
+        street,
+        province_name,
+        district_name,
+      })
+    );
+    res.json(result);
   } catch (err) {
     console.error("Error fetching data:", err);
+    return res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};
+
+const editUserAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.user;
+    const user_id = user.id;
+    const {
+      is_default,
+      first_name,
+      last_name,
+      phone_number,
+      street,
+      province_id,
+      district_id,
+      ward_id,
+    } = req.body;
+
+    if (is_default) {
+      const idExists = await pool.query(`SELECT 1 FROM address WHERE id = $1`, [
+        id,
+      ]);
+
+      if (idExists.rows.length === 0) {
+        return res.status(404).json({ error: "ID not found" });
+      }
+
+      await pool.query(
+        `UPDATE address SET is_default = 0 WHERE user_id = $1 AND id != $2`,
+        [user_id, id]
+      );
+    }
+
+    const result = await pool.query(
+      `UPDATE address SET user_id = $1, is_default = $2, phone_number = $4, street = $5, province_id = $6, district_id = $7, ward_id = $8, first_name = $3, last_name = $10 WHERE id = $9 RETURNING *`,
+      [
+        user_id,
+        is_default,
+        first_name,
+        phone_number,
+        street,
+        province_id,
+        district_id,
+        ward_id,
+        id,
+        last_name,
+      ]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error updating address:", err);
+    return res.status(500).json({ error: "Lỗi máy chủ" });
+  }
+};
+
+const uploadAddress = async (req, res) => {
+  try {
+    const user = req.user;
+    const user_id = user.id;
+    const {
+      is_default,
+      first_name,
+      last_name,
+      phone_number,
+      street,
+      province_id,
+      district_id,
+      ward_id,
+    } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO address (user_id, is_default, first_name, last_name, phone_number, street, province_id, district_id, ward_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [
+        user_id,
+        is_default,
+        first_name,
+        last_name,
+        phone_number,
+        street,
+        province_id,
+        district_id,
+        ward_id,
+      ]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error adding address:", err);
     return res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };
@@ -255,4 +373,6 @@ module.exports = {
   editUser,
   sellerState,
   getUserAddress,
+  editUserAddress,
+  uploadAddress,
 };

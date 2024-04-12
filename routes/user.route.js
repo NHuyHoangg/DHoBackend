@@ -14,11 +14,27 @@ router.get(
 router.get(
   "/address",
   //   #swagger.tags = ['User']
-  // #swagger.description = 'dùng lấy profile của user'
-
+  // #swagger.description = 'dùng lấy address của user'
   auth,
   userCtrl.getUserAddress
 );
+
+router.put(
+  "/address/:id",
+  //   #swagger.tags = ['User']
+  // #swagger.description = 'dùng chỉnh address của user, is default gồm 0 và 1'
+  auth,
+  userCtrl.editUserAddress
+);
+
+router.post(
+  "/address/",
+  //   #swagger.tags = ['User']
+  // #swagger.description = 'dùng thêm address cho user, is default gồm 0 và 1'
+  auth,
+  userCtrl.uploadAddress
+);
+
 router.post(
   "",
   auth,
@@ -77,6 +93,7 @@ router.post(
   "/change-password",
   // #swagger.description = 'dùng lấy đổi password'
   //   #swagger.tags = ['User']
+  auth,
   userCtrl.changePassword
 );
 module.exports = router;
