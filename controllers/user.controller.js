@@ -107,9 +107,17 @@ const deactivateUserAddress = async (req, res) => {
   try {
     const { id } = req.params;
     const user_id = req.user.id;
+    const checkDefault = await pool.query(
+      `SELECT is_default FROM address WHERE id = $1 and user_id = $2`,
+      [id, user_id]
+    );
+
+    if (checkDefault.rows[0].is_default === 1) {
+      return res.status(400).json({ error: "Cannot delete default address" });
+    }
     const result = await pool.query(
       `UPDATE address SET is_active = 0 WHERE id = $1 and user_id = $2 RETURNING *`,
-      [id, user_id ]
+      [id, user_id]
     );
 
     if (result.rowCount === 0) {
@@ -121,7 +129,6 @@ const deactivateUserAddress = async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
-
 
 const editUserAddress = async (req, res) => {
   try {
@@ -187,7 +194,7 @@ const uploadAddress = async (req, res) => {
       district_id,
       ward_id,
     } = req.body;
-    if (is_default =='1') {
+    if (is_default == "1") {
       const result = await pool.query(
         `UPDATE address SET is_default = CASE WHEN EXISTS (SELECT 1 FROM address WHERE user_id = $1) THEN 0 ELSE is_default END WHERE user_id = $1 RETURNING *`,
         [user_id]
