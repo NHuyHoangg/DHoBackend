@@ -74,20 +74,26 @@ const getUserAddress = async (req, res) => {
         ward_name,
         phone_number,
         street,
+        province_id,
+        district_id,
+        ward_id,
         province_name,
         district_name,
       }) => ({
+        is_default,
         id,
         user_id,
         name: `${last_name} ${first_name}`,
         first_name,
         last_name,
-        is_default,
-        ward_name,
         phone_number,
         street,
-        province_name,
+        ward_name,
         district_name,
+        province_name,
+        ward_id,
+        district_id,
+        province_id,
       })
     );
     res.json(result);
@@ -113,23 +119,19 @@ const editUserAddress = async (req, res) => {
       ward_id,
     } = req.body;
 
-    if (is_default) {
-      const idExists = await pool.query(`SELECT 1 FROM address WHERE id = $1`, [
-        id,
-      ]);
+    if (is_default == "1") {
+      const result = await pool.query(
+        `UPDATE address SET is_default = CASE WHEN EXISTS (SELECT 1 FROM address WHERE id = $1  AND user_id = $2) THEN 0 ELSE is_default END WHERE user_id = $2 AND id != $1 RETURNING *`,
+        [id, user_id]
+      );
 
-      if (idExists.rows.length === 0) {
+      if (result.rowCount === 0) {
         return res.status(404).json({ error: "ID not found" });
       }
-
-      await pool.query(
-        `UPDATE address SET is_default = 0 WHERE user_id = $1 AND id != $2`,
-        [user_id, id]
-      );
     }
 
     const result = await pool.query(
-      `UPDATE address SET user_id = $1, is_default = $2, phone_number = $4, street = $5, province_id = $6, district_id = $7, ward_id = $8, first_name = $3, last_name = $10 WHERE id = $9 RETURNING *`,
+      `UPDATE address SET is_default = $2, phone_number = $4, street = $5, province_id = $6, district_id = $7, ward_id = $8, first_name = $3, last_name = $10 WHERE id = $9 and user_id = $1 RETURNING *`,
       [
         user_id,
         is_default,
@@ -165,7 +167,16 @@ const uploadAddress = async (req, res) => {
       district_id,
       ward_id,
     } = req.body;
+    if (is_default =='1') {
+      const result = await pool.query(
+        `UPDATE address SET is_default = CASE WHEN EXISTS (SELECT 1 FROM address WHERE user_id = $1) THEN 0 ELSE is_default END WHERE user_id = $1 RETURNING *`,
+        [user_id]
+      );
 
+      if (result.rowCount === 0) {
+        return res.status(404).json({ error: "ID not found" });
+      }
+    }
     const result = await pool.query(
       `INSERT INTO address (user_id, is_default, first_name, last_name, phone_number, street, province_id, district_id, ward_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
       [
@@ -217,7 +228,7 @@ const changePassword = async (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     const user = req.user;
 
-    const rows  = await pool.query(
+    const rows = await pool.query(
       "SELECT password FROM public.users WHERE id = $1",
       [user.id]
     );
