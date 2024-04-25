@@ -61,7 +61,7 @@ const getUserAddress = async (req, res) => {
         AND a.district_id = w.district_id
         AND a.ward_id = w.id
       WHERE
-        a.user_id = $1 order by id`,
+        a.user_id = $1 and a.is_active = 1 order by id`,
       [user.id]
     );
     const result = address.rows.map(
@@ -102,6 +102,26 @@ const getUserAddress = async (req, res) => {
     return res.status(500).json({ error: "Lỗi máy chủ" });
   }
 };
+
+const deactivateUserAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.id;
+    const result = await pool.query(
+      `UPDATE address SET is_active = 0 WHERE id = $1 and user_id = $2 RETURNING *`,
+      [id, user_id ]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Không tìm thấy địa chỉ" });
+    }
+    res.json({ messgae: "Đã xóa địa chỉ" });
+  } catch (err) {
+    console.error("Error deactivating address:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
 
 const editUserAddress = async (req, res) => {
   try {
@@ -386,4 +406,5 @@ module.exports = {
   getUserAddress,
   editUserAddress,
   uploadAddress,
+  deactivateUserAddress,
 };

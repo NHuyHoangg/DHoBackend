@@ -27,6 +27,15 @@ router.put(
   userCtrl.editUserAddress
 );
 
+router.delete(
+  "/address/:id",
+  //   #swagger.tags = ['User']
+  // #swagger.description = ''
+  auth,
+  userCtrl.deactivateUserAddress
+);
+
+
 router.post(
   "/address/",
   //   #swagger.tags = ['User']
