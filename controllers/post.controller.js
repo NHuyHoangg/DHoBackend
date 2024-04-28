@@ -108,6 +108,10 @@ const getPosts = async (req, res) => {
     const updatedRows = getUpdatedRows(rows);
     const totalPosts = rows[0] ? rows[0].count : 0;
     const totalPages = Math.ceil(totalPosts / 10);
+        if (page > totalPages) {
+          console.log(page);
+          return res.status(400).json({ error: "Page is out of range" });
+        }
     let authHeader = "";
     authHeader += req.header("Authorization");
     if (authHeader.length > 0) {
@@ -135,7 +139,7 @@ const getPosts = async (req, res) => {
       }
     }
     client.release();
-
+    
     return res.json({
       totalEntries: totalPosts,
       totalPages: totalPages,
@@ -266,6 +270,10 @@ const searchPosts = async (req, res) => {
     const totalPosts = rows[0] ? rows[0].count : 0;
     const totalPages = Math.ceil(totalPosts / postsPerPage);
 
+    if (page > totalPages) {
+          console.log(page);
+          return res.status(400).json({ error: "Page is out of range" });
+        }
     return res.json({
       totalEntries: totalPosts,
       totalPages: totalPages,
@@ -377,6 +385,10 @@ const filterPosts = async (req, res) => {
     const rows = ressql.rows;
     const totalEntries = rows.length;
     const totalPages = Math.ceil(totalEntries / entriesPerPage);
+        if (page > totalPages) {
+          console.log(page);
+          return res.status(400).json({ error: "Page is out of range" });
+        }
     const updatedRows = getUpdatedRows(rows);
     const authHeader = req.header("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
