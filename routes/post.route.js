@@ -5,8 +5,18 @@ const auth = require("../middlewares/auth");
 
 router.get(
   "/search",
-  //  #swagger.tags = ['Posts']
-  postCtrl.searchPosts
+//  #swagger.tags = ['Posts']
+  (req, res, next) => {
+  const { q } = req.query;
+
+if (q) {
+  // Handle the case when q is null or an empty string
+  postCtrl.searchPosts(req, res, next);
+} else {
+  postCtrl.getPosts(req, res, next);
+}
+ }
+ 
 );
 // router.post(
 //   "/posts/history",
