@@ -242,7 +242,9 @@ const searchPosts = async (req, res) => {
       total_count AS (
         SELECT COUNT(*) FROM filtered_posts
       )
-      SELECT * FROM filtered_posts, total_count
+      SELECT * FROM filtered_posts
+      UNION ALL
+      SELECT * FROM total_count
       ORDER BY post_id DESC
       LIMIT $2 OFFSET $3;
     `;
