@@ -77,7 +77,9 @@ const getPosts = async (req, res) => {
         LEFT JOIN
           users rp ON p.user_id = rp.id
         LEFT JOIN
-          res_province rpr ON cast(rp.province_id as integer)  = rpr.id 
+          address a ON rp.id = a.user_id AND a.is_default = 1
+        LEFT JOIN
+          res_province rpr ON cast(a.province_id as integer)  = rpr.id 
         WHERE p.is_active = $1 AND p.is_sold = $2
       ),
       total_count AS (
@@ -152,54 +154,7 @@ const getPosts = async (req, res) => {
   }
 };
 
-// const searchPosts = async (req, res) => {
-//   try {
-//     // Query to fetch the posts with media content (index 1) and specific details
-//     const { q } = req.query;
-//     const sqlQuery = `
-//       SELECT
-//         p.ID AS post_id,
-//         p.name,
-//         p.case_size,
-//         p.status,
-//         p.price,
-//         p.create_date AS date,
-//         rpr.name AS province,
-//         pm.content AS media_content
-//       FROM
-//         post p
-//       LEFT JOIN
-//         post_media pm ON p.ID = pm.post_id::integer AND pm.post_index = 1
-//       LEFT JOIN
-//          users  rp ON p.user_id = rp.id
-//       LEFT JOIN
-//         res_province rpr ON cast(rp.province_id as integer)  = rpr.id
-//          WHERE
-//       (p.price LIKE $1 OR
-//       p.name LIKE $1 OR
-//       p.case_size LIKE $1 OR
-//       p.description LIKE $1 OR
-//       p.brand LIKE $1 OR
-//       p.color LIKE $1 OR
-//       p.strap_color LIKE $1 OR
-//       p.strap_material LIKE $1 OR
-//       p.engine LIKE $1) AND
-//       p.is_active = 1 AND p.is_sold = 0
-//       ;
-//     `;
 
-//     const client = await pool.connect();
-//     const ressql = await client.query(sqlQuery, [`%${q}%`]);
-//     const rows = ressql.rows;
-//     client.release();
-//     const updatedRows = getUpdatedRows(rows);
-//     // const updatedRows = getUpdatedRows(result);
-//     return res.json(updatedRows);
-//   } catch (err) {
-//     console.error("Error fetching data:", err);
-//     return res.status(500).json({ error: "Internal Server Error" });
-//   }
-// };
 
 const searchPosts = async (req, res) => {
   try {
@@ -210,7 +165,7 @@ const searchPosts = async (req, res) => {
 
     const sqlQuery = `
       WITH filtered_posts AS (
-        SELECT
+        SELECT  DISTINCT ON (p.ID)
           p.ID AS post_id,
           p.name,
           p.case_size,
@@ -224,9 +179,11 @@ const searchPosts = async (req, res) => {
         LEFT JOIN
           post_media pm ON p.ID = pm.post_id::integer AND pm.post_index = 1
         LEFT JOIN
-          users  rp ON p.user_id = rp.id
+          users rp ON p.user_id = rp.id
         LEFT JOIN
-          res_province rpr ON cast(rp.province_id as integer)  = rpr.id 
+          address a ON rp.id = a.user_id AND a.is_default = 1
+        LEFT JOIN
+          res_province rpr ON cast(a.province_id as integer)  = rpr.id 
         WHERE
         (p.price LIKE $1 OR
         p.name LIKE $1 OR
@@ -242,11 +199,11 @@ const searchPosts = async (req, res) => {
       total_count AS (
         SELECT COUNT(*) FROM filtered_posts
       )
-      SELECT * FROM filtered_posts
-      UNION ALL
-      SELECT * FROM total_count
-      ORDER BY post_id DESC
-      LIMIT $2 OFFSET $3;
+    SELECT fp.*, tc.count
+    FROM filtered_posts fp
+    LEFT JOIN total_count tc ON TRUE
+    ORDER BY fp.post_id DESC
+    LIMIT $2 OFFSET $3;
     `;
 
     // Validate page number
