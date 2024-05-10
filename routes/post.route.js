@@ -62,33 +62,34 @@ router.post(
 // router.post("/posts/toggle", auth, togglePostSoldStatus);
 // router.post("/posts/edit", auth, editPost);
 // router.delete("/posts/:id", auth, deletePost);
-// router.post(
-//   "/posts/upload",
-//   auth,
-//   uploadPost
-//   /*
-//   #swagger.parameters['obj'] = {
-//     in: 'body',
-//     description: 'If the image is not in base64, BE will handle it and add the tag\n Allowed params:\n' +
-//       'name,\n' +
-//       'description,\n' +
-//       'price,\n' +
-//       'status,\n' +
-//       'brand,\n' +
-//       'origin,\n' +
-//       'case_size,\n' +
-//       'color,\n' +
-//       'strap_color,\n' +
-//       'strap_material,\n' +
-//       'battery_life,\n' +
-//       'waterproof,\n' +
-//       'power,\n' +
-//       'engine,\n' +
-//       'images,\n' +
-//       'gender\n ' ,
-//     required: true
-//   }
-// */
-// );
+router.post(
+  "/posts/upload",
+  auth,
+  postCtrl.uploadPost
+  //  #swagger.tags = ['Posts']
+  /*
+  #swagger.parameters['obj'] = {
+    in: 'body',
+    description: 'If the image is not in base64, BE will handle it and add the tag\n Allowed params:\n' +
+      'name,\n' +
+      'description,\n' +
+      'price,\n' +
+      'status,\n' +
+      'brand,\n' +
+      'origin,\n' +
+      'case_size,\n' +
+      'color,\n' +
+      'strap_color,\n' +
+      'strap_material,\n' +
+      'battery_life,\n' +
+      'waterproof,\n' +
+      'power,\n' +
+      'engine,\n' +
+      'images,\n' +
+      'gender\n ' ,
+    required: true
+  }
+*/
+);
 
 module.exports = router;

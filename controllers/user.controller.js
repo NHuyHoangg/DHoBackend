@@ -195,12 +195,12 @@ const uploadAddress = async (req, res) => {
       ward_id,
     } = req.body;
     if (is_default == "1") {
-      const result = await pool.query(
+      const checkDefault = await pool.query(
         `UPDATE address SET is_default = CASE WHEN EXISTS (SELECT 1 FROM address WHERE user_id = $1) THEN 0 ELSE is_default END WHERE user_id = $1 RETURNING *`,
         [user_id]
       );
 
-      if (result.rowCount === 0) {
+      if (checkDefault.rowCount === 0) {
         return res.status(404).json({ error: "ID not found" });
       }
     }

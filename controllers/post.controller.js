@@ -110,10 +110,10 @@ const getPosts = async (req, res) => {
     const updatedRows = getUpdatedRows(rows);
     const totalPosts = rows[0] ? rows[0].count : 0;
     const totalPages = Math.ceil(totalPosts / 10);
-        if (page > totalPages) {
-          console.log(page);
-          return res.status(400).json({ error: "Page is out of range" });
-        }
+    if (page > totalPages) {
+      console.log(page);
+      return res.status(400).json({ error: "Page is out of range" });
+    }
     let authHeader = "";
     authHeader += req.header("Authorization");
     if (authHeader.length > 0) {
@@ -141,7 +141,7 @@ const getPosts = async (req, res) => {
       }
     }
     client.release();
-    
+
     return res.json({
       totalEntries: totalPosts,
       totalPages: totalPages,
@@ -153,8 +153,6 @@ const getPosts = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-
 
 const searchPosts = async (req, res) => {
   try {
@@ -230,9 +228,9 @@ const searchPosts = async (req, res) => {
     const totalPages = Math.ceil(totalPosts / postsPerPage);
 
     if (page > totalPages) {
-          console.log(page);
-          return res.status(400).json({ error: "Page is out of range" });
-        }
+      console.log(page);
+      return res.status(400).json({ error: "Page is out of range" });
+    }
     return res.json({
       totalEntries: totalPosts,
       totalPages: totalPages,
@@ -344,10 +342,10 @@ const filterPosts = async (req, res) => {
     const rows = ressql.rows;
     const totalEntries = rows.length;
     const totalPages = Math.ceil(totalEntries / entriesPerPage);
-        if (page > totalPages) {
-          console.log(page);
-          return res.status(400).json({ error: "Page is out of range" });
-        }
+    if (page > totalPages) {
+      console.log(page);
+      return res.status(400).json({ error: "Page is out of range" });
+    }
     const updatedRows = getUpdatedRows(rows);
     const authHeader = req.header("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -541,151 +539,145 @@ const postDetail = async (req, res) => {
   }
 };
 
-// const uploadPost = async (req, res) => {
-//   const allowedParams = [
-//     "name",
-//     "description",
-//     "watch_id",
-//     "images",
-//     "price",
-//     "status",
-//     "brand",
-//     "origin",
-//     "case_size",
-//     "color",
-//     "strap_color",
-//     "strap_material",
-//     "battery_life",
-//     "waterproof",
-//     "gender",
-//   ];
+const uploadPost = async (req, res) => {
+  const allowedParams = [
+    "name",
+    "description",
+    "images",
+    "price",
+    "status",
+    "brand",
+    "origin",
+    "case_size",
+    "color",
+    "strap_color",
+    "strap_material",
+    "battery_life",
+    "waterproof",
+    "gender",
+    "engine",
+  ];
 
-//   const requestBodyKeys = Object.keys(req.body);
+  const requestBodyKeys = Object.keys(req.body);
 
-//   const invalidParams = requestBodyKeys.filter((key) => {
-//     const isAllowed = allowedParams.includes(key);
-//     const isNotImage = key !== "images";
-//     const isNotString = Array.isArray(req.body[key]);
-//     return isAllowed && isNotImage && isNotString;
-//   });
+  const invalidParams = requestBodyKeys.filter((key) => {
+    const isAllowed = allowedParams.includes(key);
+    const isNotImage = key !== "images";
+    const isNotString = Array.isArray(req.body[key]);
+    return isAllowed && isNotImage && isNotString;
+  });
 
-//   if (invalidParams.length > 0) {
-//     return res.status(400).json({
-//       error: `Invalid parameter(s): ${invalidParams.join(
-//         ", "
-//       )}. Only 'images' parameter can be an array.`,
-//     });
-//   }
+  if (invalidParams.length > 0) {
+    return res.status(400).json({
+      error: `Invalid parameter(s): ${invalidParams.join(
+        ", "
+      )}. Only 'images' parameter can be an array.`,
+    });
+  }
 
-//   const validationRules = [
-//     body("name").notEmpty().withMessage("Name is required"),
-//     body("price").notEmpty().withMessage("Price is required"),
-//     body("case_size").notEmpty().withMessage("Case size is required"),
-//     body("images")
-//       .isArray({ min: 1 })
-//       .withMessage("At least one image is required"),
-//   ];
+  const validationRules = [
+    body("name").notEmpty().withMessage("Name is required"),
+    body("price").notEmpty().withMessage("Price is required"),
+    body("case_size").notEmpty().withMessage("Case size is required"),
+    body("images")
+      .isArray({ min: 1 })
+      .withMessage("At least one image is required"),
+  ];
 
-//   for (const param of allowedParams) {
-//     if (req.body[param]) {
-//       validationRules.push(body(param).trim());
-//     }
-//   }
+  for (const param of allowedParams) {
+    if (req.body[param]) {
+      validationRules.push(body(param).trim());
+    }
+  }
 
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     return res.status(400).json({ errors: errors.array() });
-//   }
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-//   const userID = req.id;
+  const userID = req.user.id;
 
-//   const [rows] = await poolPromise.query(
-//     "SELECT is_seller FROM res_partner WHERE id = ?",
-//     [userID]
-//   );
+  const rows = await pool.query(
+    "SELECT * FROM address WHERE user_id = $1 and is_default = 1 and is_active = 1",
+    [userID]
+  );
 
-//   if (rows.length === 0) {
-//     return res.status(404).json({ error: "User not found." });
-//   }
+  if (rows.length === 0) {
+    return res
+      .status(403)
+      .json({ error: "User does not have permission to upload a post." });
+  }
 
-//   const isSeller = rows[0].is_seller;
+  const { name, price, images, case_size, ...rest } = req.body;
+  if (!name || !price || !images || !case_size || images.length === 0) {
+    return res.status(400).json({ error: "Invalid request body." });
+  }
+  let modifiedCaseSize = case_size;
 
-//   if (!isSeller) {
-//     return res
-//       .status(403)
-//       .json({ error: "User does not have permission to upload a post." });
-//   }
+  if (modifiedCaseSize) {
+    modifiedCaseSize += " mm";
+  }
+  try {
+    const values_ = [
+      userID,
+      name,
+      price,
+      modifiedCaseSize,
+      ...Object.values(rest),
+    ];
+    const params = values_.map((_, index) => `$${index + 1}`).join(", ");
 
-//   const { name, price, images, case_size, post_id, ...rest } = req.body;
-//   if (!name || !price || !images || !case_size || images.length === 0) {
-//     return res.status(400).json({ error: "Invalid request body." });
-//   }
-//   let modifiedCaseSize = case_size;
+    const sql = `
+      INSERT INTO post (user_id, name, price, case_size, ${Object.keys(
+        rest
+      ).join(", ")})
+      VALUES (${params}) returning *
+    `
+    const result = await pool.query(sql, values_);
+    const post_id = result.rows[0].id;
+    const date = moment().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD_HH:mm:ss");
+    const uploadPromises = images.map(async (fileStr, i) => {
+      try {
+        if (!/^data:image\/\w+;base64,/.test(fileStr)) {
+          // If not, add the base64 tag to the beginning of the string
+          fileStr = `data:image/png;base64,${fileStr}`;
+        }
+        const imageName = `${post_id}_${date}_${i + 1}`;
+        const uploadResponse = await cloudinary.uploader.upload(fileStr, {
+          public_id: `${imageName}`,
+          folder: "DHo",
+        });
 
-//   if (modifiedCaseSize) {
-//     modifiedCaseSize += "mm";
-//   }
-//   try {
-//     const connection = await poolPromise.getConnection();
+        return uploadResponse.url;
+      } catch (error) {
+        console.error("Error uploading image:", error.message);
+        throw error;
+      }
+    });
 
-//     const [result] = await connection.query(
-//       `
-//         INSERT INTO post (user_id, name , price, case_size, ${Object.keys(
-//           rest
-//         ).join(", ")})
-//         VALUES (?, ?, ?, ?, ${Object.keys(rest)
-//           .map(() => "?")
-//           .join(", ")})
-//       `,
-//       [userID, name, price, modifiedCaseSize, ...Object.values(rest)]
-//     );
+    const uploadedImageUrls = await Promise.all(uploadPromises);
 
-//     const post_id = result.insertId;
-//     const date = moment().tz("Asia/Ho_Chi_Minh").format("YYYY-MM-DD_HH:mm:ss");
-//     const uploadPromises = images.map(async (fileStr, i) => {
-//       try {
-//         if (!/^data:image\/\w+;base64,/.test(fileStr)) {
-//           // If not, add the base64 tag to the beginning of the string
-//           fileStr = `data:image/png;base64,${fileStr}`;
-//         }
-//         const imageName = `${post_id}_${date}_${i + 1}`;
-//         const uploadResponse = await cloudinary.uploader.upload(fileStr, {
-//           public_id: `${imageName}`,
-//           folder: "ctime",
-//         });
+    const values = uploadedImageUrls
+      .map((url, i) => `('${url}', '${post_id}', ${i + 1})`)
+      .join(","); // Construct the values string for bulk insert
 
-//         return uploadResponse.url;
-//       } catch (error) {
-//         console.error("Error uploading image:", error.message);
-//         throw error;
-//       }
-//     });
+    await pool.query(
+      `INSERT INTO post_media (content, post_id, post_index) VALUES ${values}`
+    );
 
-//     const uploadedImageUrls = await Promise.all(uploadPromises);
+    const responseJSON = {
+      post_id: post_id,
+      info: { name, price, ...rest },
+      content: uploadedImageUrls,
+      message: "New row inserted successfully.",
+    };
 
-//     const values = uploadedImageUrls
-//       .map((url, i) => `('${url}', '${post_id}', ${i + 1})`)
-//       .join(","); // Construct the values string for bulk insert
-
-//     await poolPromise.query(
-//       `INSERT INTO post_media (content, post_id, post_index) VALUES ${values}`
-//     );
-
-//     connection.release();
-
-//     const responseJSON = {
-//       post_id: post_id,
-//       info: { name, price, ...rest },
-//       content: uploadedImageUrls,
-//       message: "New row inserted successfully.",
-//     };
-
-//     res.status(201).json(responseJSON);
-//   } catch (error) {
-//     console.error("Error inserting row:", error.message);
-//     res.status(500).json(error);
-//   }
-// };
+    res.status(201).json(responseJSON);
+  } catch (error) {
+    console.error("Error inserting row:", error.message);
+    res.status(500).json(error);
+  }
+};
 
 // const editPost = async (req, res) => {
 //   const allowedParams = [
@@ -945,7 +937,7 @@ module.exports = {
   getPosts,
   searchPosts,
   filterPosts,
-  // uploadPost,
+  uploadPost,
   // getActivePosts,
   //   editPost,
   //   togglePostSoldStatus,
