@@ -436,7 +436,6 @@ const postDetail = async (req, res) => {
       name,
       description,
       price,
-      watch_id,
       date,
       view,
       origin,
@@ -464,7 +463,6 @@ const postDetail = async (req, res) => {
     const productInfo = {
       id,
       name,
-      watch_id,
       description,
       price,
       formatted_price: formattedPrice(price),
