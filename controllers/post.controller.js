@@ -390,7 +390,6 @@ const postDetail = async (req, res) => {
         wm.id::integer,
         wm.name,
         rp.name as user_name,
-        wm.watch_id,
         wm.description,
         wm.price,
         wm.status,
