@@ -41,6 +41,23 @@ router.post(
   //   #swagger.tags = ['User']
   // #swagger.description = 'dùng thêm address cho user, is default gồm 0 và 1'
   auth,
+  [
+    check('is_default').not().isEmpty().withMessage('is_default is required'),
+    check('first_name').not().isEmpty().withMessage('first_name is required'),
+    check('last_name').not().isEmpty().withMessage('last_name is required'),
+    check('phone_number').not().isEmpty().withMessage('phone_number is required'),
+    check('street').not().isEmpty().withMessage('street is required'),
+    check('province_id').not().isEmpty().withMessage('province_id is required').isNumeric().withMessage('province_id must be a number'),
+    check('district_id').not().isEmpty().withMessage('district_id is required').isNumeric().withMessage('district_id must be a number'),
+    check('ward_id').not().isEmpty().withMessage('ward_id is required').isNumeric().withMessage('ward_id must be a number'),
+  ],
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
   userCtrl.uploadAddress
 );
 

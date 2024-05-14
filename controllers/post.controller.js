@@ -255,7 +255,7 @@ const filterPosts = async (req, res) => {
     } = req.query;
     const entriesPerPage = 10;
     let sqlQuery = `
-      SELECT DISTINCT ON (p.ID)
+      SELECT 
         p.ID AS post_id,
         p.name,
         CAST(p.price as integer) as price,
@@ -271,7 +271,9 @@ const filterPosts = async (req, res) => {
       LEFT JOIN
         users rp ON p.user_id = rp.id
       LEFT JOIN
-        res_province rpr ON cast(rp.province_id as integer)  = rpr.id
+          address a ON rp.id = a.user_id AND a.is_default = 1
+        LEFT JOIN
+          res_province rpr ON cast(a.province_id as integer)  = rpr.id 
       WHERE
         p.is_active = 1 AND p.is_sold = 0`;
 
@@ -331,19 +333,19 @@ const filterPosts = async (req, res) => {
           break;
       }
     }
-    sqlQuery += ` LIMIT ${entriesPerPage} OFFSET ${
-      (page - 1) * entriesPerPage
-    }`;
+    // sqlQuery += ` LIMIT ${entriesPerPage} OFFSET ${
+    //   (page - 1) * entriesPerPage
+    // }`;
     const client = await pool.connect();
     const ressql = await client.query(sqlQuery);
 
     const rows = ressql.rows;
-    const totalEntries = rows.length;
-    const totalPages = Math.ceil(totalEntries / entriesPerPage);
-    if (page > totalPages) {
-      console.log(page);
-      return res.status(400).json({ error: "Page is out of range" });
-    }
+    // const totalEntries = rows.length;
+    // const totalPages = Math.ceil(totalEntries / entriesPerPage);
+    // if (page > totalPages) {
+    //   console.log(page);
+    //   return res.status(400).json({ error: "Page is out of range" });
+    // }
     const updatedRows = getUpdatedRows(rows);
     const authHeader = req.header("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -371,8 +373,8 @@ const filterPosts = async (req, res) => {
 
     return res.json({
       currentPage: page,
-      totalEntries,
-      totalPages,
+      // totalEntries,
+      // totalPages,
       posts: updatedRows,
     });
   } catch (err) {
@@ -420,7 +422,9 @@ const postDetail = async (req, res) => {
       LEFT JOIN
         users rp ON cast(wm.user_id as integer) =cast(rp.id as integer)
       LEFT JOIN
-        res_ward rw ON cast(rp.ward_id as integer)= cast(rw.id as integer)
+          address a ON rp.id = a.user_id AND a.is_default = 1
+      LEFT JOIN
+        res_ward rw ON cast(a.ward_id as integer)= cast(rw.id as integer)
       WHERE
         wm.id = $1 AND wm.is_active = 1;
     `;
