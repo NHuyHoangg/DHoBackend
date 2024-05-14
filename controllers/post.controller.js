@@ -60,11 +60,10 @@ const getPosts = async (req, res) => {
     // Query to fetch the posts with media content (index 1) and specific details
     let sqlQuery = `
       WITH filtered_posts AS (
-        SELECT
+        SELECT DISTINCT ON (p.ID)
           p.ID AS post_id,
           p.name,
           p.price,
-          p.watch_id,
           p.case_size,
           p.status,
           p.create_date AS date,
@@ -256,11 +255,10 @@ const filterPosts = async (req, res) => {
     } = req.query;
     const entriesPerPage = 10;
     let sqlQuery = `
-      SELECT
+      SELECT DISTINCT ON (p.ID)
         p.ID AS post_id,
         p.name,
         CAST(p.price as integer) as price,
-        p.watch_id,
         p.case_size,
         p.status,
         p.create_date AS date,
@@ -388,11 +386,10 @@ const postDetail = async (req, res) => {
     const { post_id } = req.body;
     const client = await pool.connect();
     const sqlQuery = `
-     SELECT
+     SELECT 
         wm.id::integer,
         wm.name,
         rp.name as user_name,
-        wm.watch_id,
         wm.description,
         wm.price,
         wm.status,
@@ -439,7 +436,6 @@ const postDetail = async (req, res) => {
       name,
       description,
       price,
-      watch_id,
       date,
       view,
       origin,
@@ -467,7 +463,6 @@ const postDetail = async (req, res) => {
     const productInfo = {
       id,
       name,
-      watch_id,
       description,
       price,
       formatted_price: formattedPrice(price),
@@ -881,7 +876,6 @@ const uploadPost = async (req, res) => {
 //         p.ID AS post_id,
 //         p.name,
 //         p.price,
-//         p.watch_id,
 //         p.case_size,
 //         p.status,
 //         p.create_date AS date,

@@ -77,6 +77,8 @@ app.use(postsRoute);
 const usersRoute = require("./routes/user.route");
 app.use("/users", usersRoute);
 
+const favoritePostRoute = require("./routes/favoriteposts.route");
+app.use(favoritePostRoute);
 
 // // // ---------------------------- USERS  ---------------------------------- //
 // const adminRoute = require("./routes/admin.route");
