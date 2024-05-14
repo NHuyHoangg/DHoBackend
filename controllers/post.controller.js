@@ -60,7 +60,7 @@ const getPosts = async (req, res) => {
     // Query to fetch the posts with media content (index 1) and specific details
     let sqlQuery = `
       WITH filtered_posts AS (
-        SELECT
+        SELECT DISTINCT ON (p.ID)
           p.ID AS post_id,
           p.name,
           p.price,
@@ -255,7 +255,7 @@ const filterPosts = async (req, res) => {
     } = req.query;
     const entriesPerPage = 10;
     let sqlQuery = `
-      SELECT
+      SELECT DISTINCT ON (p.ID)
         p.ID AS post_id,
         p.name,
         CAST(p.price as integer) as price,
@@ -386,7 +386,7 @@ const postDetail = async (req, res) => {
     const { post_id } = req.body;
     const client = await pool.connect();
     const sqlQuery = `
-     SELECT
+     SELECT 
         wm.id::integer,
         wm.name,
         rp.name as user_name,
