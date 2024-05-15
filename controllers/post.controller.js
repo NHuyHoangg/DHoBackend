@@ -66,6 +66,7 @@ const getPosts = async (req, res) => {
           p.price,
           p.case_size,
           p.status,
+          p.is_verified,
           p.create_date AS date,
           rpr.name AS province,
           pm.content AS media_content
@@ -168,6 +169,7 @@ const searchPosts = async (req, res) => {
           p.case_size,
           p.status,
           p.price,
+          p.is_verified,
           p.create_date AS date,
           rpr.name AS province,
           pm.content AS media_content
@@ -261,6 +263,7 @@ const filterPosts = async (req, res) => {
         CAST(p.price as integer) as price,
         p.case_size,
         p.status,
+        p.is_verified,
         p.create_date AS date,
         rpr.name AS province,
         pm.content AS media_content
@@ -406,6 +409,7 @@ const postDetail = async (req, res) => {
         wm.strap_material,
         wm.battery_life,
         wm.gender,
+        wm.is_verified,
         pm.content AS media_content,
         pm.post_index AS media_index,
         wm.user_id as seller_id,
@@ -555,6 +559,7 @@ const uploadPost = async (req, res) => {
     "waterproof",
     "gender",
     "engine",
+    "is_verified"
   ];
 
   const requestBodyKeys = Object.keys(req.body);
@@ -607,12 +612,18 @@ const uploadPost = async (req, res) => {
       .json({ error: "User does not have permission to upload a post." });
   }
 
-  const { name, price, images, case_size, ...rest } = req.body;
+  const { name, price, images, case_size,...rest } = req.body;
   if (!name || !price || !images || !case_size || images.length === 0) {
     return res.status(400).json({ error: "Invalid request body." });
   }
   let modifiedCaseSize = case_size;
-
+  if (
+    rest.hasOwnProperty("is_verified") &&
+    rest.is_verified !== null &&
+    rest.is_verified !== "undefined"
+  ) {
+    rest.is_verified = 1;
+  }
   if (modifiedCaseSize) {
     modifiedCaseSize += " mm";
   }
@@ -663,7 +674,7 @@ const uploadPost = async (req, res) => {
     await pool.query(
       `INSERT INTO post_media (content, post_id, post_index) VALUES ${values}`
     );
-
+    
     const responseJSON = {
       post_id: post_id,
       info: { name, price, ...rest },

@@ -86,7 +86,8 @@ router.post(
       'power,\n' +
       'engine,\n' +
       'images,\n' +
-      'gender\n ' ,
+      'gender\n ' +
+      'is_verified',
     required: true
   }
 */
