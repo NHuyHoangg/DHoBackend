@@ -62,8 +62,8 @@ const locationRoutes = require("./routes/location.route");
 app.use("/location", locationRoutes);
 
 // // // ---------------------------- RECHARGES  ---------------------------------- //
-// const rechargeRoute = require("./routes/recharge.route")
-// app.use("/recharge",rechargeRoute)
+const rechargeRoute = require("./routes/recharge.route")
+app.use("/recharge",rechargeRoute)
 
 // // // ---------------------------- PAYMENTS  ---------------------------------- //
 // const paymentRoute = require("./routes/payment.route")
