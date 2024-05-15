@@ -317,35 +317,6 @@
         }
       }
     },
-    "/recharge/{userID}": {
-      "get": {
-        "tags": [
-          "Recharge"
-        ],
-        "description": "",
-        "parameters": [
-          {
-            "name": "userID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
     "/search": {
       "get": {
         "tags": [
@@ -479,6 +450,59 @@
         }
       }
     },
+    "/posts/{id}": {
+      "delete": {
+        "tags": [
+          "Posts"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "post_id": {
+                  "example": "any"
+                },
+                "user_id": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/posts/upload": {
       "post": {
         "tags": [
@@ -514,7 +538,7 @@
                 }
               }
             },
-            "description": "If the image is not in base64, BE will handle it and add the tag\n Allowed params:\nname,\ndescription,\nprice,\nstatus,\nbrand,\norigin,\ncase_size,\ncolor,\nstrap_color,\nstrap_material,\nbattery_life,\nwaterproof,\npower,\nengine,\nimages,\ngender\n ",
+            "description": "If the image is not in base64, BE will handle it and add the tag\n Allowed params:\nname,\ndescription,\nprice,\nstatus,\nbrand,\norigin,\ncase_size,\ncolor,\nstrap_color,\nstrap_material,\nbattery_life,\nwaterproof,\npower,\nengine,\nimages,\ngender\n is_verified",
             "required": true
           }
         ],

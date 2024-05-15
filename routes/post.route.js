@@ -61,7 +61,12 @@ router.post(
 );
 // router.post("/posts/toggle", auth, togglePostSoldStatus);
 // router.post("/posts/edit", auth, editPost);
-// router.delete("/posts/:id", auth, deletePost);
+router.delete(
+  "/posts/:id",
+  //  #swagger.tags = ['Posts']
+  auth,
+  postCtrl.deletePost
+);
 router.post(
   "/posts/upload",
   auth,

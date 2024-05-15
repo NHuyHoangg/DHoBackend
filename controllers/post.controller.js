@@ -391,10 +391,9 @@ const postDetail = async (req, res) => {
     const { post_id } = req.body;
     const client = await pool.connect();
     const sqlQuery = `
-     SELECT 
+     SELECT distinct ON (wm.id)
         wm.id::integer,
         wm.name,
-        rp.name as user_name,
         wm.description,
         wm.price,
         wm.status,
@@ -413,9 +412,10 @@ const postDetail = async (req, res) => {
         pm.content AS media_content,
         pm.post_index AS media_index,
         wm.user_id as seller_id,
-         rp.name as user_name,
+        rp.first_name as first_name,
+         rp.last_name as last_name,
         rp.phone as phone,
-        rp.street as street,
+        a.street as street,
         rw.district_name as district,
         rw.province_name as province,
         rw.name as ward
@@ -454,7 +454,8 @@ const postDetail = async (req, res) => {
       strap_material,
       battery_life,
       gender,
-      user_name,
+      first_name,
+      last_name,
       province,
       seller_id,
       phone,
@@ -490,7 +491,7 @@ const postDetail = async (req, res) => {
       waterproof_num: waterproof === "Chống nước" ? true : false,
       gender,
       seller_id,
-      user_name,
+      name: `${last_name} ${first_name}`,
       phone,
       province,
       district,
@@ -816,27 +817,27 @@ const uploadPost = async (req, res) => {
 //   }
 // };
 
-// const deletePost = (req, res) => {
-//   const post_id = req.params.id;
-//   const user_id = req.id;
+const deletePost = async (req, res) => {
+  const { post_id, user_id } = req.body;
 
-//   pool.query(
-//     "UPDATE post set is_active = 0 WHERE ID = ? AND user_id = ?",
-//     [post_id, user_id],
-//     (err, result) => {
-//       if (err) {
-//         res.status(500).json({ error: "Error deleting post." });
-//       } else if (result.affectedRows === 0) {
-//         res
-//           .status(404)
-//           .json({ error: "Post not found or does not belong to user." });
-//       } else {
-//         res.status(200).json({ message: "Post deleted successfully." });
-//       }
-//     }
-//   );
-// };
+  try {
+    const [result] = await pool.query(
+      "UPDATE post SET is_active = 0 WHERE ID = ? AND user_id = ?",
+      [post_id, user_id]
+    );
 
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "Post not found or does not belong to user." });
+    }
+
+    return res.status(200).json({ message: "Post deleted successfully." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Error deleting post." });
+  }
+};
 // const togglePostSoldStatus = async (req, res) => {
 //   const { postId } = req.body;
 //   const userID = req.id;
@@ -941,7 +942,7 @@ const uploadPost = async (req, res) => {
 // };
 
 module.exports = {
-  // deletePost,
+  deletePost,
   postDetail,
   getPosts,
   searchPosts,
