@@ -819,14 +819,15 @@ const uploadPost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   const user_id = req.user.id;
-  const { post_id } = req.params;
+  const post_id = req.params.id;
+
   try {
     const result = await pool.query(
-      "UPDATE post SET is_active = 0 WHERE ID = $1 AND user_id = $2",
+      "UPDATE post SET is_active = 0 WHERE id = $1 AND user_id = $2 returning *",
       [post_id, user_id]
     );
-
-    if (result.affectedRows === 0) {
+    console.log(result.rows);
+    if (result.rows.length === 0) {
       return res
         .status(404)
         .json({ error: "Post not found or does not belong to user." });
