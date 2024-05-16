@@ -10,7 +10,7 @@ async function logMiddleware(req, res, next) {
   const server_domain = req.hostname;
   const startTime = new Date();
   res.on("finish", async () => {
-    const user_id = req.id || "unknown";
+    const user_id = req.user.id || "unknown";
     const body = JSON.stringify(req.body);
     const endTime = new Date();
     const responseTime = endTime - startTime;
@@ -18,7 +18,7 @@ async function logMiddleware(req, res, next) {
 
     client.query(
       "INSERT INTO logs (level, message, user_id, api_route, server_domain,ip,time_now,msg) VALUES ($1, $2, $3, $4,$5 ,$6,$7,$8)",
-      [body, responseTime, user_id, api_route, server_domain, ip, vietnamTime,res.message],
+      [body, responseTime, user_id, api_route, server_domain, ip, vietnamTime,res],
       (err, result) => {
         if (err) {
           console.error("Error inserting log:", err.message);
