@@ -822,7 +822,7 @@ const deletePost = async (req, res) => {
 
   try {
     const [result] = await pool.query(
-      "UPDATE post SET is_active = 0 WHERE ID = ? AND user_id = ?",
+      "UPDATE post SET is_active = 0 WHERE ID = $1 AND user_id = $2",
       [post_id, user_id]
     );
 
