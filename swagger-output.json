@@ -467,21 +467,6 @@
             "name": "Authorization",
             "in": "header",
             "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "post_id": {
-                  "example": "any"
-                },
-                "user_id": {
-                  "example": "any"
-                }
-              }
-            }
           }
         ],
         "responses": {

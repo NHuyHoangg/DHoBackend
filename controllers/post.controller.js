@@ -818,10 +818,10 @@ const uploadPost = async (req, res) => {
 // };
 
 const deletePost = async (req, res) => {
-  const { user_id } = req.body;
+  const user_id = req.user.id;
   const { post_id } = req.params;
   try {
-    const [result] = await pool.query(
+    const result = await pool.query(
       "UPDATE post SET is_active = 0 WHERE ID = $1 AND user_id = $2",
       [post_id, user_id]
     );
