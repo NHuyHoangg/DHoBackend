@@ -491,7 +491,7 @@ const postDetail = async (req, res) => {
       waterproof_num: waterproof === "Chống nước" ? true : false,
       gender,
       seller_id,
-      name: `${last_name} ${first_name}`,
+      user_name: `${last_name} ${first_name}`,
       phone,
       province,
       district,
