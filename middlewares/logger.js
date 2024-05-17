@@ -29,7 +29,7 @@ async function logMiddleware(req, res, next) {
         server_domain,
         ip,
         vietnamTime,
-        res.error,
+        JSON.stringify(res.error),
       ],
       (err, result) => {
         if (err) {
