@@ -50,9 +50,9 @@ router.get("/vnpay_return", (req, res) => {
   rechargeCtrl.vnpayReturn(req, res);
 });
 
-// router.get("/vnp_ipn", (req, res) => {
-//   rechargeCtrl.vnpayIPN(req, res);
-// });
+router.get("/vnp_ipn", (req, res) => {
+  rechargeCtrl.vnpayIPN(req, res);
+});
 
 // router.get(
 //   "/:userID",
