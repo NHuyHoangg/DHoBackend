@@ -130,7 +130,7 @@ const vnpayIPN = async (req, res) => {
       status = "SUCCESS";
     } else status = "FAILED";
 
-    console.log("User ID: " + userID);
+    console.log(vnp_Params);
   } catch (e) {
     console.log("Error when updating payment");
   }
