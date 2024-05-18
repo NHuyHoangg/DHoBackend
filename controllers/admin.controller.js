@@ -83,28 +83,33 @@ const createUser = async (req, res) => {
   }
 };
 
-const blockUser = async (req, res) => {
+const toggleBlockUser = async (req, res) => {
   const { id } = req.body;
   try {
     const userQuery = `SELECT is_active FROM users WHERE id = $1`;
     const result = await pool.query(userQuery, [id]);
 
-    if (result.rows.length > 0 && result.rows[0].is_active === 0) {
-      return res.status(400).json({ message: "User is already blocked." });
+    if (result.rows.length === 0) {
+      return res.status(400).json({ message: "User not found." });
     }
 
+    const is_active = result.rows[0].is_active;
     const updateQuery = `
       UPDATE users
       SET
-        is_active = 0
+        is_active = ${is_active === 0 ? 1 : 0}
       WHERE id = $1
     `;
     await pool.query(updateQuery, [id]);
 
-    res.json({ message: "User blocked successfully." });
+    res.json({
+      message: `User ${
+        is_active === 0 ? "unblocked" : "blocked"
+      } successfully.`,
+    });
   } catch (err) {
-    console.error("Error blocking user:", err.message);
-    res.status(500).json({ error: "Error blocking user." });
+    console.error("Error updating user block status:", err.message);
+    res.status(500).json({ error: "Error updating user block status." });
   }
 };
 
@@ -112,5 +117,5 @@ module.exports = {
   getUser,
   updateUser,
   createUser,
-  blockUser,
+  toggleBlockUser,
 };

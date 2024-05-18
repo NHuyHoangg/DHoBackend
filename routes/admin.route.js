@@ -39,7 +39,7 @@ router.post(
   // #swagger.description = 'block user'
   auth,
   admin,
-  adminCtr.blockUser
+  adminCtr.toggleBlockUser
 );
 
 
