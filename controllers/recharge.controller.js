@@ -138,13 +138,8 @@ const vnpayIPN = async (req, res) => {
     console.log(`Executing query: ${queryText} with parameters: ${params}`);
 
     const ressql = await pool.query(
-      queryText, params,
-      (error, results) => {
-        if (error) {
-          throw error;
-        }
-        console.log("Row inserted");
-      }
+      queryText,
+      [amount, orderID, userID, status, orderInfo, transactionNo]
     );
   } catch (e) {
     console.log(e)
