@@ -60,7 +60,7 @@ const getPosts = async (req, res) => {
     // Query to fetch the posts with media content (index 1) and specific details
     let sqlQuery = `
       WITH filtered_posts AS (
-        SELECT DISTINCT ON (p.ID)
+        SELECT
           p.ID AS post_id,
           p.name,
           p.price,
@@ -69,7 +69,8 @@ const getPosts = async (req, res) => {
           p.is_verified,
           p.create_date AS date,
           rpr.name AS province,
-          pm.content AS media_content
+          pm.content AS media_content,
+          date_diff_in_days(pa.time_left) as is_ads
         FROM
           post p
         LEFT JOIN
@@ -79,14 +80,28 @@ const getPosts = async (req, res) => {
         LEFT JOIN
           address a ON rp.id = a.user_id AND a.is_default = 1
         LEFT JOIN
-          res_province rpr ON cast(a.province_id as integer)  = rpr.id 
-        WHERE p.is_active = $1 AND p.is_sold = $2
+          res_province rpr ON cast(a.province_id as integer)  = rpr.id
+        LEFT JOIN
+          post_ads pa ON p.id = pa.post_id and pa.is_active = 1
+        WHERE p.is_active = 1 AND p.is_sold = 0
       ),
       total_count AS (
         SELECT COUNT(*) FROM filtered_posts
+      ),
+      post as (SELECT DISTINCT ON (post_id)
+        post_id,
+        name,
+        price,
+        case_size,
+        status,
+        is_verified,
+        date,
+        province,
+        media_content,
+        is_ads
+      FROM filtered_posts
       )
-      SELECT * FROM filtered_posts, total_count
-      ORDER BY post_id DESC
+      SELECT * FROM post, total_count  ORDER BY is_ads DESC, post_id DESC
     `;
     //paging
     let page = req.query.page || 1;
@@ -105,7 +120,7 @@ const getPosts = async (req, res) => {
     const client = await pool.connect();
     // Execute count query
 
-    const ressql = await client.query(sqlQuery, [1, 0]);
+    const ressql = await client.query(sqlQuery);
     const rows = ressql.rows;
     const updatedRows = getUpdatedRows(rows);
     const totalPosts = rows[0] ? rows[0].count : 0;
