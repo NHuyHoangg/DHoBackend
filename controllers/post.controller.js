@@ -187,7 +187,8 @@ const searchPosts = async (req, res) => {
           p.is_verified,
           p.create_date AS date,
           rpr.name AS province,
-          pm.content AS media_content
+          pm.content AS media_content,
+          date_diff_in_days(pa.time_left) as is_ads
         FROM
           post p
         LEFT JOIN
@@ -197,7 +198,9 @@ const searchPosts = async (req, res) => {
         LEFT JOIN
           address a ON rp.id = a.user_id AND a.is_default = 1
         LEFT JOIN
-          res_province rpr ON cast(a.province_id as integer)  = rpr.id 
+          res_province rpr ON cast(a.province_id as integer)  = rpr.id
+        LEFT JOIN
+           post_ads pa ON p.id = pa.post_id and pa.is_active = 1
         WHERE
         (p.price LIKE $1 OR
         p.name LIKE $1 OR
@@ -216,7 +219,7 @@ const searchPosts = async (req, res) => {
     SELECT fp.*, tc.count
     FROM filtered_posts fp
     LEFT JOIN total_count tc ON TRUE
-    ORDER BY fp.post_id DESC
+    ORDER BY is_ads desc, fp.post_id DESC
     LIMIT $2 OFFSET $3;
     `;
 
@@ -281,7 +284,8 @@ const filterPosts = async (req, res) => {
         p.is_verified,
         p.create_date AS date,
         rpr.name AS province,
-        pm.content AS media_content
+        pm.content AS media_content,
+        date_diff_in_days(pa.time_left) as is_ads
       FROM
         post p
       LEFT JOIN
@@ -290,10 +294,13 @@ const filterPosts = async (req, res) => {
         users rp ON p.user_id = rp.id
       LEFT JOIN
           address a ON rp.id = a.user_id AND a.is_default = 1
-        LEFT JOIN
-          res_province rpr ON cast(a.province_id as integer)  = rpr.id 
+      LEFT JOIN
+          res_province rpr ON cast(a.province_id as integer)  = rpr.id
+      LEFT JOIN
+         post_ads pa ON p.id = pa.post_id and pa.is_active = 1
       WHERE
-        p.is_active = 1 AND p.is_sold = 0`;
+        p.is_active = 1 AND p.is_sold = 0
+       `;
 
     if (condition) {
       sqlQuery += ` AND p.status = '${condition}'`;
@@ -325,7 +332,7 @@ const filterPosts = async (req, res) => {
       const maxSizeValue = parseInt(maxSize);
 
       if (!isNaN(minSizeValue) && !isNaN(maxSizeValue)) {
-        sqlQuery += ` AND CAST(SUBSTR(p.case_size, 1, LENGTH(p.case_size) - 2) AS UNSIGNED) >= ${minSizeValue} AND CAST(SUBSTR(p.case_size, 1, LENGTH(p.case_size) - 2) AS UNSIGNED) <= ${maxSizeValue}`;
+ sqlQuery += ` AND CAST(REPLACE(p.case_size, 'mm', '') AS DOUBLE PRECISION) >= ${minSizeValue} AND CAST(REPLACE(p.case_size, 'mm', '') AS DOUBLE PRECISION) <= ${maxSizeValue}`;
       }
     }
 
@@ -351,9 +358,11 @@ const filterPosts = async (req, res) => {
           break;
       }
     }
+    else sqlQuery += " ORDER BY is_ads DESC, date DESC, p.ID";
     // sqlQuery += ` LIMIT ${entriesPerPage} OFFSET ${
     //   (page - 1) * entriesPerPage
     // }`;
+
     const client = await pool.connect();
     const ressql = await client.query(sqlQuery);
 
@@ -388,12 +397,15 @@ const filterPosts = async (req, res) => {
       }
     }
     client.release();
-
+    let uniqueUpdatedRows = updatedRows.filter(
+      (value, index, self) =>
+        index === self.map((item) => item.post_id).indexOf(value.post_id)
+    );
     return res.json({
       currentPage: page,
       // totalEntries,
       // totalPages,
-      posts: updatedRows,
+      posts: uniqueUpdatedRows,
     });
   } catch (err) {
     console.error("Error fetching data:", err);
