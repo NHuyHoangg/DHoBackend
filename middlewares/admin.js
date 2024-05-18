@@ -3,15 +3,15 @@ const admin = (req, res, next) => {
         if (req.user === undefined) {
             return res.status(401).json({error: 'Please authenticate'})
         }
-        const role = req.user.role;
-        if (role !== "ADMIN") {
+        const role = req.user.is_admin;
+        if (role !== 1) {
             return res.status(403).json({error: 'Access is not allowed'})
         }
         next();
     }
     catch (err) {
-        // console.log("bruh")
-        res.status(500).json({ 
+
+        res.status(500).json({
             message: "Internal Server Error",
             error: err.message
         })

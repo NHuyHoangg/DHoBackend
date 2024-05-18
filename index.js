@@ -83,8 +83,8 @@ app.use(favoritePostRoute);
 const adsRoute = require("./routes/ads.route");
 app.use(adsRoute);
 // // // ---------------------------- USERS  ---------------------------------- //
-// const adminRoute = require("./routes/admin.route");
-// app.use("/admin", adminRoute);
+const adminRoute = require("./routes/admin.route");
+app.use("/admin", adminRoute);
 
 
 const port = process.env.PORT || 3001;
