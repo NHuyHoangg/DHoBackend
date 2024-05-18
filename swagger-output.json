@@ -1078,6 +1078,47 @@
         }
       }
     },
+    "/create-order": {
+      "get": {
+        "tags": [
+          "Shipping"
+        ],
+        "description": "chỉnh sửa service, is_admin = 1 || 0",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/shipping_ipn": {
+      "post": {
+        "tags": [
+          "Shipping"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "description": "data input to login",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/admin/users": {
       "get": {
         "tags": [

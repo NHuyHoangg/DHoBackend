@@ -82,6 +82,9 @@ app.use(favoritePostRoute);
 
 const adsRoute = require("./routes/ads.route");
 app.use(adsRoute);
+
+const shippingRoute = require("./routes/shipping.route");
+app.use(shippingRoute);
 // // // ---------------------------- USERS  ---------------------------------- //
 const adminRoute = require("./routes/admin.route");
 app.use("/admin", adminRoute);

@@ -16,16 +16,19 @@ const moment = require("moment-timezone");
 const getUser = async (req, res) => {
   try {
     const selectQuery =
-      "SELECT id,first_name,last_name,email,phone,is_active  from users";
+      "SELECT id,first_name,last_name,email,phone,is_active,is_admin  from users";
     const rows = await pool.query(selectQuery);
 
     const result = rows.rows.map(
-      ({ id, first_name, last_name, email, phone, is_active }) => ({
+      ({ id, first_name, last_name, email, phone, is_active, is_admin }) => ({
         id,
         name: `${last_name} ${first_name}`,
+        first_name,
+        last_name,
         email,
         phone,
         is_active,
+        is_admin
       })
     );
     res.json(result);
