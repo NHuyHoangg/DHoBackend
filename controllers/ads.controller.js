@@ -7,15 +7,28 @@ const { pool } = require("../database/dbinfo");
 const getUpdatedRows = require("../utils/update");
 const moment = require("moment");
 
+const getAds = async (req, res) => {
+    try {
+        const selectQuery = "SELECT price,expiration_day, name  from services";
+        const rows = await pool.query(selectQuery);
+        
+        res.json(rows.rows);
+    } catch (err) {
+        console.error("Error getting adds:", err.message);
+        res.status(500).json({ error: "Error getting adds." });
+    }
+    
+}
+
 
 const addAds = async (req, res) => {
   const post_id = req.body.post_id;
-  const days = req.body.days;
+  const days = req.body.expiration_day;
   try {
     const selectQuery =
       "SELECT 1 FROM post_ads WHERE post_id = $1 and is_active = 1";
-      const rows = await pool.query(selectQuery, [post_id]);
-      
+    const rows = await pool.query(selectQuery, [post_id]);
+
     if (rows.rows.length > 0) {
       res.status(400).json({ error: "Post này đang được đẩy tin." });
       return;
@@ -43,21 +56,16 @@ const addAds = async (req, res) => {
     let returnUrl = process.env.vnp_ReturnUrl;
 
     let orderId = moment(date).format("DDHHmmss");
-    let amount;
-    switch (days) {
-      case '7':
-        amount = '50000';
-        break;
-      case '3':
-        amount = '25000';
-        break;
-      case '1':
-        amount = '10000';
-        break;
-      default:
-        amount = 0;
-    }
-      let bankCode = "";
+    const serviceQ =
+      "SELECT price,expiration_day FROM services WHERE is_active = 1";
+    const service = await pool.query(serviceQ);
+    const serviceInfo = service.rows;
+
+    let services = serviceInfo.find((service) => service.expiration_day == days);
+
+    let amount = services.price;
+
+    let bankCode = "";
 
     let locale = "";
     if (locale === null || locale === "" || locale === undefined) {
@@ -93,16 +101,16 @@ const addAds = async (req, res) => {
     vnp_Params["vnp_SecureHash"] = signed;
     vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
 
-    const insertQuery =
-      "INSERT INTO post_ads (post_id, order_id,days) VALUES ($1, $2,$3)";
-    await pool.query(insertQuery, [post_id, orderId, days]);
+    // const insertQuery =
+    //   "INSERT INTO post_ads (post_id, order_id,days) VALUES ($1, $2,$3)";
+    // await pool.query(insertQuery, [post_id, orderId, days]);
 
     res.status(201).json({
       message: "Đã yêu cầu đẩy tin. Vui lòng thanh toán",
       paymentURL: vnpUrl,
     });
   } catch (err) {
-    console.error("Error inserting favorite:", err.message);
+    console.error("Error inserting :", err.message);
     res.status(500).json({ error: "Error inserting." });
   }
 };
@@ -122,4 +130,4 @@ function sortObject(obj) {
   }
   return sorted;
 }
-module.exports = { addAds };
+module.exports = { addAds, getAds };

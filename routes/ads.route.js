@@ -16,6 +16,20 @@ router.post(
   auth,
   ads.addAds
 );
+
+
+router.get(
+  "/ads",
+  // #swagger.tags = ['Ads post']
+  /*
+  #swagger.parameters['obj'] = {
+    in: 'body',
+    description: 'lấy các gói',
+    required: true
+  }
+*/
+  ads.getAds
+);
 // router.post(
 //   "/favorite_post",
 //   // #swagger.tags = ['Favorite post']
