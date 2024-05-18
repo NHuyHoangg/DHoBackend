@@ -42,5 +42,32 @@ router.post(
   adminCtr.toggleBlockUser
 );
 
+router.post(
+  "/service-edit",
+  // #swagger.tags = ['ADMIN']
+  // #swagger.description = 'chỉnh sửa service, is_admin = 1 || 0'
+  auth,
+  admin,
+  adminCtr.editService
+);
+
+
+router.post(
+  "/service-create",
+  // #swagger.tags = ['ADMIN']
+  // #swagger.description = 'tạo service'
+  auth,
+  admin,
+  adminCtr.createService
+);
+
+router.post(
+  "/service-block",
+  // #swagger.tags = ['ADMIN']
+  // #swagger.description = 'block service'
+  auth,
+  admin,
+  adminCtr.toggleService
+);
 
 module.exports = router;

@@ -34,6 +34,15 @@ async function logMiddleware(req, res, next) {
       (err, result) => {
         if (err) {
           console.error("Error inserting log:", err.message);
+          pool.query(
+            "INSERT INTO logs (api_route, server_domain) VALUES ($1, $2)",
+            [api_route, server_domain],
+            (err, result) => {
+              if (err) {
+                console.error("Error inserting log:", err.message);
+              }
+            }
+          );
         }
       }
     );
