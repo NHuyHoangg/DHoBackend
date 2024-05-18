@@ -129,8 +129,17 @@ const vnpayIPN = async (req, res) => {
     if (status == "00") {
       status = "SUCCESS";
     } else status = "FAILED";
-
-    console.log(vnp_Params);
+    let paymentTime = moment(vnp_Params["vnp_PayDate"], "YYYYMMDDHHmmss"); 
+    let transactionNo = vnp_Params["vnp_TransactionNo"];
+    pool.query(
+  'INSERT INTO recharge_history (amount, order_id, user_id, status, order_info, transaction_no) VALUES ($1, $2, $3, $4, $5, $6)',
+  [amount, orderID, userID, status, orderInfo, transactionNo],
+  (error, results) => {
+    if (error) {
+      throw error;
+    }
+    console.log('Row inserted');
+  }
   } catch (e) {
     console.log("Error when updating payment");
   }
