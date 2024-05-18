@@ -1033,7 +1033,7 @@
             "type": "string"
           },
           {
-            "name": "obj",
+            "name": "body",
             "in": "body",
             "schema": {
               "type": "object",
@@ -1045,9 +1045,7 @@
                   "example": "any"
                 }
               }
-            },
-            "description": "days = 1 || 3 || 7",
-            "required": true
+            }
           }
         ],
         "responses": {
@@ -1069,19 +1067,7 @@
         "tags": [
           "Ads post"
         ],
-        "description": "",
-        "parameters": [
-          {
-            "name": "obj",
-            "in": "body",
-            "description": "lấy các gói",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {}
-            }
-          }
-        ],
+        "description": "lấy các gói",
         "responses": {
           "200": {
             "description": "OK"

@@ -6,13 +6,7 @@ const auth = require("../middlewares/auth");
 router.post(
   "/ads",
   // #swagger.tags = ['Ads post']
-  /*
-  #swagger.parameters['obj'] = {
-    in: 'body',
-    description: 'days = 1 || 3 ||  7',
-    required: true
-  }
-*/
+
   auth,
   ads.addAds
 );
@@ -21,13 +15,8 @@ router.post(
 router.get(
   "/ads",
   // #swagger.tags = ['Ads post']
-  /*
-  #swagger.parameters['obj'] = {
-    in: 'body',
-    description: 'lấy các gói',
-    required: true
-  }
-*/
+  // #swagger.description = 'lấy các gói'
+
   ads.getAds
 );
 // router.post(
