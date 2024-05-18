@@ -15,7 +15,7 @@ async function logMiddleware(req, res, next) {
     if (req.user === undefined) {
       user_id = "unknown";
     } else user_id = req.user.id;
-
+     var querystring = require("qs");
     const body = JSON.stringify(req.body);
     const endTime = new Date();
     const responseTime = endTime - startTime;
@@ -29,7 +29,7 @@ async function logMiddleware(req, res, next) {
         server_domain,
         ip,
         vietnamTime,
-        JSON.stringify(req.query),
+        querystring.stringify(req.query, { encode: false }),
       ],
       (err, result) => {
         if (err) {
