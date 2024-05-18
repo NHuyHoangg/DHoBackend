@@ -10,7 +10,8 @@ const signIn = async (req, res) => {
   const { phone, password } = req.body;
 
   try {
-    const userQuery = "SELECT id FROM users WHERE phone = $1 AND password = $2";
+    const userQuery =
+      "SELECT id,is_active,role,first_name,last_name, tokenversion FROM users WHERE phone = $1 AND password = $2";
     const userRes = await pool.query(userQuery, [phone, password]);
     const user = userRes.rows[0];
 
@@ -19,11 +20,12 @@ const signIn = async (req, res) => {
         .status(401)
         .json({ message: "Thông tin đăng nhập không chính xác" });
     }
-
-    const userInfoQuery =
-      'SELECT id, role,first_name,last_name, tokenversion FROM users WHERE id = $1';
-    const userInfoRes = await pool.query(userInfoQuery, [user.id]);
-    const userInfo = userInfoRes.rows[0];
+    if(user.is_active == 0) {
+      return res
+        .status(401)
+        .json({ message: "Tài khoản đã bị khóa" });
+    }
+    const userInfo = user;
 
     const token = jwt.sign(
       { id: userInfo.id.toString(), tokenVersion: userInfo.tokenVersion },
