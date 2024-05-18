@@ -131,12 +131,16 @@ const vnpayIPN = async (req, res) => {
     } else status = "FAILED";
     let paymentTime = moment(vnp_Params["vnp_PayDate"], "YYYYMMDDHHmmss"); 
     let transactionNo = vnp_Params["vnp_TransactionNo"];
+    const queryText =
+      "INSERT INTO recharge_history (amount, order_id, user_id, status, order_info, transaction_no) VALUES ($1, $2, $3, $4, $5, $6)";
+
+    const params = [amount, orderID, userID, status, orderInfo, transactionNo];
+    console.log(`Executing query: ${queryText} with parameters: ${params}`);
+
     const ressql = await pool.query(
-      "INSERT INTO recharge_history (amount, order_id, user_id, status, order_info, transaction_no) VALUES ($1, $2, $3, $4, $5, $6)",
-      [amount, orderID, userID, status, orderInfo, transactionNo],
+      queryText, params,
       (error, results) => {
         if (error) {
-          console.log(ressql);
           throw error;
         }
         console.log("Row inserted");
