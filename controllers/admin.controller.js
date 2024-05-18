@@ -84,6 +84,7 @@ const createUser = async (req, res) => {
       email,
       phone,
       password,
+      is_admin
     ]);
 
     res.json({ message: "User created successfully." });
