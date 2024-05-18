@@ -3,24 +3,31 @@ const router = express.Router();
 const ads = require("../controllers/ads.controller");
 const auth = require("../middlewares/auth");
 
-router.get(
-  "/favorite_post",
-  // #swagger.tags = ['Favorite post']
-  auth,
-  getFavorites
-);
 router.post(
-  "/favorite_post",
-  // #swagger.tags = ['Favorite post']
+  "/ads",
+  // #swagger.tags = ['Ads post']
+  /*
+  #swagger.parameters['obj'] = {
+    in: 'body',
+    description: 'days = 1 || 3 ||  7',
+    required: true
+  }
+*/
   auth,
-  addFavorite
+  ads.addAds
 );
-router.delete(
-  "/favorite_post/:id",
-  // #swagger.tags = ['Favorite post']
+// router.post(
+//   "/favorite_post",
+//   // #swagger.tags = ['Favorite post']
+//   auth,
+//   addFavorite
+// );
+// router.delete(
+//   "/favorite_post/:id",
+//   // #swagger.tags = ['Favorite post']
 
-  auth,
-  deleteFavorite
-);
+//   auth,
+//   deleteFavorite
+// );
 
 module.exports = router;
