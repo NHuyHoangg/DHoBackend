@@ -4,7 +4,7 @@ const moment = require("moment");
 const { successFilePath, failureFilePath } = require("../resources/export");
 
 
-
+const { pool } = require("../database/dbinfo");
 
 
 
