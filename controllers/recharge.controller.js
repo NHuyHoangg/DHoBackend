@@ -147,6 +147,7 @@ const vnpayIPN = async (req, res) => {
       }
     );
   } catch (e) {
+    console.log(e)
     console.log("Error when updating payment");
   }
 
