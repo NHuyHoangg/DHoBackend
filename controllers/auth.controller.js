@@ -109,7 +109,7 @@ const forgotPassword = async (req, res) => {
     }
 
     const newPassword = Math.random().toString(36).slice(2, 8);
-    const tokenVersionIncrement = "token_version = token_version + 1";
+    const tokenVersionIncrement = "tokenversion = tokenversion + 1";
 
     await pool.query(
       `UPDATE users SET password = $1, ${tokenVersionIncrement} WHERE id = $2`,
@@ -118,7 +118,7 @@ const forgotPassword = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        user: "bkhostelhelper@gmail.com",
+        user: "dho.helper.service@gmail.com",
         pass: process.env.GMAIL_PASSWORD,
       },
     });
@@ -126,7 +126,7 @@ const forgotPassword = async (req, res) => {
     const content = `
   <div style="padding: 10px; background-color: #003375">
     <div style="padding: 10px; background-color: white; border-radius: 5px;">
-      <h2 style="color: #0085ff; text-align: center; margin-bottom: 20px;">Trung tâm hỗ trợ BKHostel</h2>
+      <h2 style="color: #0085ff; text-align: center; margin-bottom: 20px;">Trung tâm hỗ trợ DHo</h2>
       <p style="color: black; font-size: 16px; line-height: 1.5;">
         Chúng tôi đã hỗ trợ bạn lấy lại mật khẩu. Dưới đây là mật khẩu mới của bạn:
       </p>
@@ -136,13 +136,13 @@ const forgotPassword = async (req, res) => {
       </p>
       <p style="color: black; font-size: 16px; line-height: 1.5; text-align: center;">
         Trân trọng,<br>
-        Đội ngũ BKHostel
+        Đội ngũ DHo
       </p>
     </div>
   </div>
 `;
     const mailOptions = {
-      from: "bkhostelhelper@gmail.com",
+      from: "dho.helper.service@gmail.com",
       to: email,
       subject: "Thay đổi mật khẩu",
       html: content,
