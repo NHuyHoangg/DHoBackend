@@ -320,6 +320,27 @@ const editUser = async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+
+     const existingUserQuery =
+       "SELECT * FROM users WHERE (phone = $1 OR email = $2) AND id != $3";
+     const existingUserRes = await pool.query(existingUserQuery, [
+       phone,
+       email,
+       user.id,
+     ]);
+     if (existingUserRes.rows.length > 0) {
+       const existingUser = existingUserRes.rows[0];
+       if (existingUser.phone === phone) {
+         return res.status(409).json({ message: "Phone đã tồn tại" });
+       }
+       if (existingUser.email === email) {
+         return res.status(409).json({ message: "Email đã tồn tại" });
+       }
+     }
+
+
+
+
     let oldAvatar = user.avatar;
     try {
       if (avatarFromBody) {
