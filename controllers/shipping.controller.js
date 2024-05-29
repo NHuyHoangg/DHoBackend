@@ -12,9 +12,9 @@ const createShippingOrder = async (req, res) => {
         wm.price,
         wm.is_verified,
         wm.user_id as seller_id,
-        rp.first_name as first_name,
-         rp.last_name as last_name,
-        rp.phone as phone,
+        a.first_name as first_name,
+         a.last_name as last_name,
+        a.phone_number as phone,
         a.street as street,
         rw.district_name as district_name,
         rw.province_name as province_name,
@@ -34,7 +34,7 @@ const createShippingOrder = async (req, res) => {
     `;
 
   const rows = await pool.query(sellerInfoQ, [post_id]);
-console.log((rows.rows))
+// console.log((rows.rows))
   const buyerAddress = await pool.query(
     `SELECT
         a.id,
@@ -62,70 +62,78 @@ console.log((rows.rows))
   const rawData = {
     payment_type_id: 2,
     required_note: "CHOXEMHANGKHONGTHU",
-    return_phone: "0332190158",
-    return_address: "39 NTT",
+    return_phone: rows.rows[0].phone,
+    return_address: rows.rows[0].street,
     return_district_id: null,
     return_ward_code: "",
     client_order_code: "",
     from_name: `${rows.rows[0].last_name} ${rows.rows[0].first_name}`,
-    from_phone: "0987654321",
-    from_address: "72 Thành Thái, Phường 14, Quận 10, Hồ Chí Minh, Vietnam",
+    from_phone: rows.rows[0].phone,
+    from_address: rows.rows[0].street,
     from_ward_name: rows.rows[0].ward_name,
     from_district_name: rows.rows[0].district_name,
     from_province_name: rows.rows[0].province_name,
     to_name: `${buyerAddress.rows[0].last_name} ${buyerAddress.rows[0].first_name}`,
-    to_phone: "0987654321",
-    to_address: "72 Thành Thái, Phường 14, Quận 10, Hồ Chí Minh, Vietnam",
+    to_phone: buyerAddress.rows[0].phone_number,
+    to_address: buyerAddress.rows[0].street,
     to_ward_name: buyerAddress.rows[0].ward_name,
     to_district_name: buyerAddress.rows[0].district_name,
     to_province_name: buyerAddress.rows[0].province_name,
-    cod_amount: 5000000,
-    content: "Theo New York Times",
-    weight: 200,
-    length: 1,
-    width: 19,
+    cod_amount: parseInt(rows.rows[0].price, 10),
+    content: rows.rows[0].name,
+    weight: 500,
+    length: 10,
+    width: 10,
     height: 10,
     cod_failed_amount: 2000,
-    pick_station_id: 1444,
+    pick_station_id: null,
     deliver_station_id: null,
     insurance_value: 1000,
     service_id: 0,
     service_type_id: 2,
     coupon: null,
-    pickup_time: 1692840132,
     pick_shift: [2],
     items: [
       {
-        name: "Áo Polo",
-        code: "Polo123",
+        name: rows.rows[0].name,
+        code: "Dongho",
         quantity: 1,
-        price: 5000,
+        price: parseInt(rows.rows[0].price, 10),
         length: 12,
         width: 12,
         weight: 1200,
         height: 12,
         category: {
-          level1: "Áo",
+          level1: "Đồng hồ",
         },
       },
     ],
   };
 
   try {
-    // const response = await axios.post(
-    //   "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create",
-    //   rawData,
-    //   {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "ShopId": process.env.GHN_shop,
-    //       "token": process.env.GHN_token,
-    //     },
-    //   }
-    // );
-    console.log(rawData);
-    res.json("ok");
-    // res.json(response.data);
+    const response = await axios.post(
+      "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/preview",
+      rawData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "ShopId": process.env.GHN_shop,
+          "token": process.env.GHN_token,
+        },
+      }
+    );
+    let obj = {
+      address: buyerAddress.rows[0].street,
+      ward_name: buyerAddress.rows[0].ward_name,
+      district_name: buyerAddress.rows[0].district_name,
+      province_name: buyerAddress.rows[0].province_name,
+      phone: buyerAddress.rows[0].phone_number,
+      cod_amount: parseInt(rows.rows[0].price, 10),
+      content: rows.rows[0].name,
+      shipping: parseInt(response.data.data.total_fee, 10),
+      total: parseInt(response.data.data.total_fee, 10) + parseInt(rows.rows[0].price, 10),
+    };
+    res.json(obj);
   } catch (error) {
     console.error(error);
     res.status(500).send("Error creating shipping order");

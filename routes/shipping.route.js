@@ -4,7 +4,7 @@ const shippingCtrl = require("../controllers/shipping.controller");
 const auth = require("../middlewares/auth");
 
 router.post(
-  "/create-order",
+  "/order-review",
   // #swagger.tags = ['Shipping']
   auth,
   shippingCtrl.createShippingOrder
