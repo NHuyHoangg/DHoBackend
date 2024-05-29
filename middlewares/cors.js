@@ -6,6 +6,7 @@ const corsOptions = {
     "http://localhost:3001",
     "http://localhost:5173", 
     "https://sandbox.vnpayment.vn", 
+    "https://admin.hcmut.tech"
   ],
   credentials: true,
   method: ["GET", "PUT", "POST", "PATCH", "DELETE"],

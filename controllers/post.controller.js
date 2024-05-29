@@ -491,7 +491,7 @@ const postDetail = async (req, res) => {
       waterproof,
       district,
       ward,
-    } = results[0];
+  } = results[0];
 
     if (case_size) {
       var case_size_num = parseInt(case_size.match(/\d+/)[0]);
