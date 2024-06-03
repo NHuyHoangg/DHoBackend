@@ -70,7 +70,7 @@ const getPosts = async (req, res) => {
           p.create_date AS date,
           rpr.name AS province,
           pm.content AS media_content,
-          date_diff_in_days(pa.time_left) as is_ads
+          date_diff_in_days(pa.time_left)::int as is_ads
         FROM
           post p
         LEFT JOIN
@@ -94,10 +94,10 @@ const getPosts = async (req, res) => {
         price,
         case_size,
         status,
-        is_verified,
         date,
         province,
         media_content,
+        is_verified,
         is_ads
       FROM filtered_posts
       )
