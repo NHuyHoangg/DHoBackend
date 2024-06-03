@@ -436,6 +436,7 @@ const postDetail = async (req, res) => {
         wm.battery_life,
         wm.gender,
         wm.is_verified,
+        COALESCE(date_diff_in_days(pa.time_left), 0)::int as is_ads,
         pm.content AS media_content,
         pm.post_index AS media_index,
         wm.user_id as seller_id,
@@ -456,6 +457,8 @@ const postDetail = async (req, res) => {
           address a ON rp.id = a.user_id AND a.is_default = 1
       LEFT JOIN
         res_ward rw ON cast(a.ward_id as integer)= cast(rw.id as integer)
+        LEFT JOIN
+          post_ads pa ON wm.id = pa.post_id and pa.is_active = 1
       WHERE
         wm.id = $1 AND wm.is_active = 1;
     `;
@@ -481,6 +484,8 @@ const postDetail = async (req, res) => {
       strap_material,
       battery_life,
       gender,
+      is_ads,
+      is_verified,
       first_name,
       last_name,
       province,
@@ -517,6 +522,8 @@ const postDetail = async (req, res) => {
       waterproof,
       waterproof_num: waterproof === "Chống nước" ? true : false,
       gender,
+      is_ads,
+      is_verified,
       seller_id,
       user_name: `${last_name} ${first_name}`,
       phone,
