@@ -9,7 +9,7 @@ const moment = require("moment");
 
 const getAds = async (req, res) => {
     try {
-        const selectQuery = "SELECT id,name,price,expiration_day, description from services whre is_active = 1";
+        const selectQuery = "SELECT id,name,price,expiration_day, description from services where is_active = 1";
         const rows = await pool.query(selectQuery);
         
         res.json(rows.rows);
