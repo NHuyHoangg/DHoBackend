@@ -418,7 +418,7 @@ const postDetail = async (req, res) => {
     const { post_id } = req.body;
     const client = await pool.connect();
     const sqlQuery = `
-     SELECT distinct ON (wm.id)
+     SELECT
         wm.id::integer,
         wm.name,
         wm.description,

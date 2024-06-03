@@ -34,7 +34,7 @@ const createShippingOrder = async (req, res) => {
     `;
 
   const rows = await pool.query(sellerInfoQ, [post_id]);
-// console.log((rows.rows))
+  // console.log((rows.rows))
   const buyerAddress = await pool.query(
     `SELECT
         a.id,
@@ -117,8 +117,8 @@ const createShippingOrder = async (req, res) => {
       {
         headers: {
           "Content-Type": "application/json",
-          "ShopId": process.env.GHN_shop,
-          "token": process.env.GHN_token,
+          ShopId: process.env.GHN_shop,
+          token: process.env.GHN_token,
         },
       }
     );
@@ -131,7 +131,9 @@ const createShippingOrder = async (req, res) => {
       cod_amount: parseInt(rows.rows[0].price, 10),
       content: rows.rows[0].name,
       shipping: parseInt(response.data.data.total_fee, 10),
-      total: parseInt(response.data.data.total_fee, 10) + parseInt(rows.rows[0].price, 10),
+      total:
+        parseInt(response.data.data.total_fee, 10) +
+        parseInt(rows.rows[0].price, 10),
     };
     res.json(obj);
   } catch (error) {
