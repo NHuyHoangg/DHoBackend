@@ -26,7 +26,7 @@ const addAds = async (req, res) => {
   const days = req.body.expiration_day;
   try {
     const selectQuery =
-      "SELECT 1 FROM post_ads WHERE post_id = $1 and is_active = 1";
+      "SELECT 1 FROM post_ads WHERE post_id = $1 and is_active = 1 and time_left > now()";
     const rows = await pool.query(selectQuery, [post_id]);
 
     if (rows.rows.length > 0) {
@@ -101,9 +101,9 @@ const addAds = async (req, res) => {
     vnp_Params["vnp_SecureHash"] = signed;
     vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
 
-    // const insertQuery =
-    //   "INSERT INTO post_ads (post_id, order_id,days) VALUES ($1, $2,$3)";
-    // await pool.query(insertQuery, [post_id, orderId, days]);
+    const insertQuery =
+      "INSERT INTO post_ads (post_id, order_id,days) VALUES ($1, $2,$3)";
+    await pool.query(insertQuery, [post_id, orderId, days]);
 
     res.status(201).json({
       message: "Đã yêu cầu đẩy tin. Vui lòng thanh toán",
